@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/work-unit-ledger-v1.schema.json",
+  "title": "Codex Work Unit Ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "ledger_id",
+    "objective",
+    "work_units",
+    "evidence_refs",
+    "extensions"
+  ],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "ledger_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "objective": { "type": "string", "minLength": 1 },
+    "work_units": {
+      "type": "array",
+      "items": { "$ref": "work-unit-v1.schema.json" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$"
+      },
+      "additionalProperties": true
+    }
+  }
+}

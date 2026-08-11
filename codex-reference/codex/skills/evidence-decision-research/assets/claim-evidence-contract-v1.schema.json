@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/claim-evidence-case-v1.schema.json",
+  "title": "Claim Evidence Case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "case_id",
+    "objective",
+    "status",
+    "as_of",
+    "scope",
+    "source_policy",
+    "questions",
+    "claims",
+    "sources",
+    "evidence_links",
+    "counterevidence_checked",
+    "unresolved",
+    "conclusion",
+    "extensions"
+  ],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "case_id": { "$ref": "#/$defs/nonEmptyString" },
+    "objective": { "$ref": "#/$defs/nonEmptyString" },
+    "status": {
+      "enum": ["draft", "researching", "synthesizing", "complete", "blocked"]
+    },
+    "as_of": { "type": "string", "format": "date-time" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includes", "excludes", "constraints"],
+      "properties": {
+        "includes": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } },
+        "excludes": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } },
+        "constraints": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } }
+      }
+    },
+    "source_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "freshness", "exceptions"],
+      "properties": {
+        "primary": { "enum": ["required-when-available", "preferred", "not-required"] },
+        "freshness": { "enum": ["required", "context-dependent", "not-required"] },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim_id", "gate", "reason"],
+            "properties": {
+              "claim_id": { "$ref": "#/$defs/nonEmptyString" },
+              "gate": { "enum": ["primary", "freshness"] },
+              "reason": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "question", "scope", "status", "answer_claim_ids"],
+        "properties": {
+          "id": { "$ref": "#/$defs/nonEmptyString" },
+          "question": { "$ref": "#/$defs/nonEmptyString" },
+          "scope": { "$ref": "#/$defs/nonEmptyString" },
+          "status": { "enum": ["open", "answered", "disqualified", "blocked"] },
+          "answer_claim_ids": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "statement",
+          "status",
+          "confidence",
+          "materiality",
+          "primary_evidence_required",
+          "freshness_required"
+        ],
+        "properties": {
+          "id": { "$ref": "#/$defs/nonEmptyString" },
+          "statement": { "$ref": "#/$defs/nonEmptyString" },
+          "status": { "enum": ["proposed", "supported", "mixed", "unsupported", "refuted", "unknown"] },
+          "confidence": { "enum": ["high", "medium", "low", "none"] },
+          "materiality": { "enum": ["required", "decision-relevant", "context"] },
+          "primary_evidence_required": { "type": "boolean" },
+          "freshness_required": { "type": "boolean" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "locator", "source_type", "publisher", "retrieved_at", "freshness", "summary"],
+        "properties": {
+          "id": { "$ref": "#/$defs/nonEmptyString" },
+          "title": { "$ref": "#/$defs/nonEmptyString" },
+          "locator": { "$ref": "#/$defs/nonEmptyString" },
+          "source_type": { "enum": ["primary", "secondary", "observed"] },
+          "publisher": { "$ref": "#/$defs/nonEmptyString" },
+          "published_at": { "type": ["string", "null"] },
+          "retrieved_at": { "type": "string", "format": "date-time" },
+          "freshness": { "enum": ["current", "stale", "unknown", "not-applicable"] },
+          "summary": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "evidence_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "claim_id", "source_id", "direction", "directness", "strength", "locator", "note"],
+        "properties": {
+          "id": { "$ref": "#/$defs/nonEmptyString" },
+          "claim_id": { "$ref": "#/$defs/nonEmptyString" },
+          "source_id": { "$ref": "#/$defs/nonEmptyString" },
+          "direction": { "enum": ["supports", "contradicts", "context"] },
+          "directness": { "enum": ["direct", "inferred"] },
+          "strength": { "enum": ["strong", "moderate", "weak"] },
+          "locator": { "$ref": "#/$defs/nonEmptyString" },
+          "note": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "counterevidence_checked": { "type": "boolean" },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "question", "impact", "next_check"],
+        "properties": {
+          "id": { "$ref": "#/$defs/nonEmptyString" },
+          "question": { "$ref": "#/$defs/nonEmptyString" },
+          "impact": { "enum": ["blocking", "material", "minor"] },
+          "next_check": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "conclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "summary", "confidence", "decision_impact", "rationale_claim_ids"],
+      "properties": {
+        "status": { "enum": ["pending", "recommendation", "no-decision", "blocked", "not-applicable"] },
+        "summary": { "type": "string" },
+        "confidence": { "enum": ["high", "medium", "low", "none"] },
+        "decision_impact": { "type": "string" },
+        "rationale_claim_ids": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "evidence-review.decision": { "$ref": "#/$defs/decisionExtension" },
+        "evidence-review.review": { "$ref": "#/$defs/reviewExtension" },
+        "evidence-review.discovery": { "$ref": "#/$defs/discoveryExtension" }
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "decisionExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["options", "selected_option_id"],
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "claim_ids", "disqualified"],
+            "properties": {
+              "id": { "$ref": "#/$defs/nonEmptyString" },
+              "label": { "$ref": "#/$defs/nonEmptyString" },
+              "claim_ids": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } },
+              "disqualified": { "type": "boolean" }
+            }
+          }
+        },
+        "selected_option_id": { "type": ["string", "null"] }
+      }
+    },
+    "reviewExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["findings"],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "claim_id", "disposition", "action", "evidence_link_ids", "validation_refs"],
+            "properties": {
+              "id": { "$ref": "#/$defs/nonEmptyString" },
+              "claim_id": { "$ref": "#/$defs/nonEmptyString" },
+              "disposition": { "enum": ["valid", "stale", "intentional", "duplicate", "unclear"] },
+              "action": { "enum": ["fixed", "fix-recommended", "skipped", "deferred", "response-drafted", "no-change"] },
+              "evidence_link_ids": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } },
+              "validation_refs": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } }
+            }
+          }
+        }
+      }
+    },
+    "discoveryExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constraints", "candidates"],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "statement", "priority"],
+            "properties": {
+              "id": { "$ref": "#/$defs/nonEmptyString" },
+              "statement": { "$ref": "#/$defs/nonEmptyString" },
+              "priority": { "enum": ["hard", "preference"] }
+            }
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "locator", "qualification", "checked_at", "constraint_results"],
+            "properties": {
+              "id": { "$ref": "#/$defs/nonEmptyString" },
+              "name": { "$ref": "#/$defs/nonEmptyString" },
+              "locator": { "$ref": "#/$defs/nonEmptyString" },
+              "qualification": { "enum": ["qualifies", "rejected", "unknown"] },
+              "checked_at": { "type": "string", "format": "date-time" },
+              "constraint_results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["constraint_id", "status", "claim_id"],
+                  "properties": {
+                    "constraint_id": { "$ref": "#/$defs/nonEmptyString" },
+                    "status": { "enum": ["pass", "fail", "unknown"] },
+                    "claim_id": { "$ref": "#/$defs/nonEmptyString" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

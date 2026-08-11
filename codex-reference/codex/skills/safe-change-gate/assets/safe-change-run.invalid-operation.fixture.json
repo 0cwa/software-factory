@@ -1,0 +1,62 @@
+{
+  "contract_version": "1.0.0",
+  "run_id": "fixture-invalid-operation",
+  "objective": "Exercise an incomplete high-risk operation.",
+  "mode": "dry-run",
+  "status": "planned",
+  "target": {
+    "kind": "provider-resource",
+    "locator": "test/resource-123",
+    "environment": "test",
+    "resolved_identity": "resource-123"
+  },
+  "scope": {"includes": [{"id": "resource-123"}], "excludes": []},
+  "authority": {
+    "read": "allowed",
+    "write": "approval-required",
+    "external": "approval-required",
+    "live": "forbidden",
+    "destructive": "forbidden",
+    "privileged": "forbidden"
+  },
+  "snapshots": {
+    "before": {
+      "artifact_ref": "artifacts/fixture-before.json",
+      "digest": "sha256:before",
+      "captured_at": "2026-08-06T00:00:00Z",
+      "scope": "resource-123"
+    },
+    "after": null
+  },
+  "plan": {
+    "generated_from": "artifacts/fixture-before.json",
+    "operations": [
+      {
+        "id": "op-delete-resource-123",
+        "action": "delete",
+        "target": "resource-123",
+        "expected_effect": "Delete the fixture resource.",
+        "preconditions": []
+      }
+    ]
+  },
+  "dry_run": {
+    "status": "pending",
+    "command": null,
+    "exit_code": null,
+    "predicted_operation_ids": [],
+    "invariants": [],
+    "side_effects_detected": null
+  },
+  "approval": {
+    "required_dimensions": ["write", "external", "destructive"],
+    "state": "not-requested",
+    "scope": null,
+    "observed_at": null
+  },
+  "apply_receipts": [],
+  "verification": {"postconditions": [], "unchanged_conditions": [], "omissions": []},
+  "rollback": {"condition": null, "procedure": null, "required_dimensions": [], "status": "not-planned"},
+  "blockers": [],
+  "next_action": "Provide the missing operation safety flags."
+}

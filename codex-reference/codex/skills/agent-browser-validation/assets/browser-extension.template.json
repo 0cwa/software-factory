@@ -1,0 +1,1 @@
+{"development-quality.browser":{"acceptance_gap":"User-visible path not currently agent-runnable","capabilities":["isolated identities"],"setup":"lightest viable adapter","fixtures":[],"critical_path":[],"evidence":[],"cleanup":"remove ephemeral profiles and test data"}}

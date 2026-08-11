@@ -1,0 +1,74 @@
+{
+  "registry_version": "1.0.0",
+  "family": {
+    "id": "example-skill-family",
+    "purpose": "Replace with the outcome this family owns.",
+    "workspace": ".codex/skill-family"
+  },
+  "contracts": [
+    {
+      "id": "work-unit",
+      "version": "1.0.0",
+      "owner": "work-unit-core",
+      "path": "contracts/work-unit-v1.schema.json"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "example-entry",
+      "name": "Example Entry Skill",
+      "version": "0.1.0",
+      "summary": "Replace with a concise capability summary.",
+      "operational_failure_prevented": "Replace with a concrete failure.",
+      "kind": "entry-skill",
+      "maturity": "prototype",
+      "location": "skills/example-entry",
+      "provenance": "project",
+      "canonical_owner_of": [
+        "example-primitive"
+      ],
+      "positive_triggers": [
+        "Replace with a request that must trigger this capability."
+      ],
+      "negative_triggers": [
+        "Replace with a nearby request that must not trigger it."
+      ],
+      "distinct_deliverable": "Replace with the output that distinguishes it.",
+      "consumes_contracts": [],
+      "emits_contracts": [
+        "work-unit@1.0.0"
+      ],
+      "depends_on": [],
+      "composes_with": [],
+      "authority_class": "workspace-write",
+      "mutation_surface": [
+        "governed workspace only"
+      ],
+      "overlaps": [],
+      "supersedes": null,
+      "replaced_by": null,
+      "context_cost": {
+        "exposed": true,
+        "description_characters": 0,
+        "skill_lines": 0
+      },
+      "golden_tasks": [
+        "family-bootstrap"
+      ],
+      "trigger_tests": [
+        "routing-baseline"
+      ],
+      "last_verified": null,
+      "evidence_projects": [
+        "example-project"
+      ],
+      "promotion_gate": {
+        "target": "stable",
+        "missing": [
+          "second-project evidence",
+          "holdout forward-test pass"
+        ]
+      }
+    }
+  ]
+}

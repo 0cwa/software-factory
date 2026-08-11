@@ -1,0 +1,352 @@
+{
+  "$schema": "https://pi.dev/protocol/manifest-v1.schema.json",
+  "schemaVersion": 1,
+  "node": {
+    "id": "pi_pe",
+    "purpose": "Discover, validate, persist, register, inspect, and execute deterministic linear pi-protocol pipelines.",
+    "tags": [
+      "pipelines",
+      "orchestration",
+      "management"
+    ]
+  },
+  "provides": [
+    {
+      "name": "catalog",
+      "description": "Search or list compact protocol capability cards without dumping full schemas.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "nodeId": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 262144
+            },
+            "maxItems": 1000
+          },
+          "executionType": {
+            "type": "string",
+            "enum": [
+              "handler",
+              "agent"
+            ],
+            "maxLength": 262144
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 262144
+            },
+            "maxItems": 1000
+          },
+          "generated": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "describe_target",
+      "description": "Describe one exact nodeId.provide contract, including full schemas and its canonical fingerprint.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "maxLength": 262144
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "validate_pipeline",
+      "description": "Validate a PipelineSpecV1 without writing or registering it.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "spec"
+        ],
+        "properties": {
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "save_pipeline",
+      "description": "Validate, atomically persist, and register a pipeline. Runtime-only assurance requires explicit allowRuntimeOnly.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "spec"
+        ],
+        "properties": {
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "allowRuntimeOnly": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "fs.write",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "unsafe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "get_pipeline",
+      "description": "Retrieve one saved pipeline specification and its dependency/registration status.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 262144
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "fs.read",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "list_pipelines",
+      "description": "List compact cards for saved, disabled, and quarantined pipelines.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "fs.read",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "delete_pipeline",
+      "description": "Unregister and delete one saved pipeline after confirm is explicitly true.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id",
+          "confirm"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "confirm": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "fs.write",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "unsafe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "run_pipeline",
+      "description": "Run a saved pipeline by ID and return a management envelope with bounded execution details.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id",
+          "input"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "input": {}
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "unsafe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    },
+    {
+      "name": "dry_run_mapping",
+      "description": "Construct every step input from supplied pipeline input and fixture step outputs without invoking dependencies.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "pipelineInput"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "stepOutputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "pipelineInput": {}
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    },
+    {
+      "name": "reload_pipelines",
+      "description": "Re-read persisted specifications, validate the full graph, and reconcile generated registrations.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "fs.read",
+        "fs.write",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "unsafe",
+        "interaction": "request_response",
+        "cancellable": false
+      }
+    }
+  ]
+}

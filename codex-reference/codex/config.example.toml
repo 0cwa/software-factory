@@ -1,0 +1,13 @@
+# Portable Codex configuration reference.
+#
+# Project trust entries and machine-specific paths from the source config are
+# intentionally omitted. Add local project entries in a user-owned config.
+
+model = "gpt-5.6-luna"
+model_reasoning_effort = "xhigh"
+service_tier = "default"
+approvals_reviewer = "auto_review"
+
+[features]
+remote_plugin = false
+apps = false

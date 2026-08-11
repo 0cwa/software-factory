@@ -1,0 +1,4 @@
+interface:
+  display_name: "External API Reconciler"
+  short_description: "Reconcile API state without omissions"
+  default_prompt: "Use $external-api-reconciler to snapshot, plan, dry-run, and safely reconcile this external API state."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Review Findings"
+  short_description: "Verify findings before making minimal fixes"
+  default_prompt: "Use $verify-review-findings to check these findings against the current code and fix only confirmed issues."

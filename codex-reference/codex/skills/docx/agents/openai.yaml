@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX"
+  short_description: "Create, edit, validate, and combine DOCX files"
+  default_prompt: "Work with this DOCX file safely and preserve its formatting."

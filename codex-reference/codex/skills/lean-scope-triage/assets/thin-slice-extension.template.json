@@ -1,0 +1,1 @@
+{"development-quality.lean-scope":{"user_outcome":"One end-to-end usable outcome","time_box":"Bounded by repository evidence","stop_condition":"Acceptance path passes","mandatory_gates":["Safety and compatibility"],"deferred_capabilities":["Optional expansion"]}}

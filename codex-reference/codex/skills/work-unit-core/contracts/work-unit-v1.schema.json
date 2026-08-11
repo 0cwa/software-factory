@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/work-unit-v1.schema.json",
+  "title": "Codex Work Unit v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "work_id",
+    "objective",
+    "scope",
+    "authority",
+    "owner",
+    "status",
+    "dependencies",
+    "acceptance_gates",
+    "deliverables",
+    "evidence_refs",
+    "blockers",
+    "next_action",
+    "extensions"
+  ],
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "work_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "objective": { "type": "string", "minLength": 1 },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspaces", "includes", "excludes"],
+      "properties": {
+        "workspaces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "excludes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read", "write", "external", "live", "destructive", "approval_state"],
+      "properties": {
+        "read": { "$ref": "#/$defs/authorityState" },
+        "write": { "$ref": "#/$defs/authorityState" },
+        "external": { "$ref": "#/$defs/authorityState" },
+        "live": { "$ref": "#/$defs/authorityState" },
+        "destructive": { "$ref": "#/$defs/authorityState" },
+        "privileged": { "$ref": "#/$defs/authorityState" },
+        "commit": { "$ref": "#/$defs/authorityState" },
+        "push": { "$ref": "#/$defs/authorityState" },
+        "approvals": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "write": { "$ref": "#/$defs/approvalState" },
+            "external": { "$ref": "#/$defs/approvalState" },
+            "live": { "$ref": "#/$defs/approvalState" },
+            "destructive": { "$ref": "#/$defs/approvalState" },
+            "privileged": { "$ref": "#/$defs/approvalState" },
+            "commit": { "$ref": "#/$defs/approvalState" },
+            "push": { "$ref": "#/$defs/approvalState" }
+          }
+        },
+        "approval_state": {
+          "enum": ["not-needed", "not-requested", "requested", "granted", "denied", "unknown"]
+        }
+      }
+    },
+    "owner": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "role"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "role": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "status": {
+      "enum": ["planned", "ready", "active", "review", "verified", "complete", "blocked", "replanned"]
+    },
+    "dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" }
+    },
+    "acceptance_gates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/acceptanceGate" }
+    },
+    "deliverables": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/deliverable" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceRef" }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/blocker" }
+    },
+    "next_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "owner", "requires_approval"],
+      "properties": {
+        "action": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "command": { "type": ["string", "null"] },
+        "requires_approval": { "type": "boolean" }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$"
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "authorityState": {
+      "enum": ["allowed", "read-only", "approval-required", "forbidden", "unknown"]
+    },
+    "approvalState": {
+      "enum": ["not-needed", "not-requested", "requested", "granted", "denied", "unknown"]
+    },
+    "acceptanceGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "criterion", "status", "evidence_refs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "criterion": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "passed", "failed", "skipped"] },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "deliverable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "location", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "location": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["planned", "created", "verified", "omitted"] },
+        "summary": { "type": "string" }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "location", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["command", "test", "inspection", "artifact", "decision", "external"] },
+        "location": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": ["string", "null"] }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "state", "owner"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["open", "resolved"] },
+        "owner": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

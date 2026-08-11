@@ -1,0 +1,13 @@
+{
+  "manifest_version":"1.0.0","installer_id":"example-app-user-local","supported_targets":[{"os":"linux","architecture":"x86_64","prefix":"$XDG_DATA_HOME/example-app"}],
+  "source_inputs":[{"id":"source","locator":"upstream source identity","version":"pinned revision","verification":"signature or checksum"}],
+  "build":{"environment":"ephemeral adapter","network":"declared","commands":[],"outputs":["staging/bin/example-app"]},
+  "runtime_dependencies":[],
+  "artifacts":[{"source":"staging/bin/example-app","destination":"bin/example-app","type":"file","mode":"0755","ownership":"installer"}],
+  "integrations":[],
+  "persistent_state":{"paths":[],"upgrade":"retain","uninstall":"retain-unless-explicitly-requested"},
+  "activation":{"strategy":"atomic-when-practical","entry_points":["bin/example-app"]},
+  "verification":[{"id":"installed-operation","criterion":"A real installed operation succeeds.","command":"bin/example-app smoke-test"}],
+  "rollback":{"strategy":"restore previous receipt-owned artifact set"},
+  "uninstall":{"source_of_truth":"install receipt","postconditions":["No receipt-owned runtime artifact remains"]}
+}

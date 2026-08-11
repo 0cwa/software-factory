@@ -1,0 +1,20 @@
+{
+  "contract_version": "1.0.0",
+  "case_id": "quality-example",
+  "objective": "Reduce repeated cross-module friction without changing behavior.",
+  "status": "complete",
+  "trigger": {"observation": "The same policy must be edited in three unrelated modules.", "evidence_refs": ["inspection:policy-duplicates"], "recurrence": "repeated"},
+  "scope": {"includes": ["Shared policy boundary"], "excludes": ["Unrelated feature cleanup"], "constraints": ["Preserve public behavior"]},
+  "options": [
+    {"id": "defer", "summary": "Keep the duplication and document it.", "expected_value": "low", "effort": "small", "risk": "low", "reversibility": "easy", "tradeoffs": ["Friction remains"]},
+    {"id": "extract", "summary": "Extract one local shared policy boundary.", "expected_value": "high", "effort": "small", "risk": "medium", "reversibility": "easy", "tradeoffs": ["Touches three callers"]}
+  ],
+  "decision": {"outcome": "proceed", "option_id": "extract", "rationale": "The bounded extraction removes repeated change points with a small reversible diff."},
+  "blast_radius": {"files": ["policy module", "three callers"], "interfaces": ["internal policy API"], "data": [], "users": ["existing callers"], "unknowns": []},
+  "preservation_gates": [{"id": "behavior", "criterion": "Existing public behavior is unchanged.", "status": "passed", "evidence_refs": ["test:focused-compatibility"]}],
+  "validation": [{"id": "focused", "criterion": "Focused policy and caller tests pass.", "status": "passed", "command": "project-specific focused test", "evidence_refs": ["test:focused-suite"]}],
+  "deferrals": [{"id": "d1", "item": "Broader module redesign", "reason": "No observed friction requires it.", "upgrade_seam": "Reassess only if the extracted boundary gains incompatible responsibilities."}],
+  "blockers": [],
+  "next_action": "Implement the bounded extraction as a separate change.",
+  "extensions": {"development-quality.architecture-friction": {"classification": "duplication-friction"}}
+}

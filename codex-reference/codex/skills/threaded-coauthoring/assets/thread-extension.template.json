@@ -1,0 +1,1 @@
+{"content-collaboration.threads":{"threads":[{"id":"thread-1","source":"batch and anchor","human_response":"Accepted edit","agent_proposal":null,"target":"canonical document section","disposition":"integrated","evidence_refs":["diff:canonical"]}],"coverage":{"total":1,"integrated":1,"unresolved":0}}}

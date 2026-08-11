@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/staged-work-extension-v1.schema.json",
+  "title": "staged-workflows.orchestration extension v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["extension_version", "phase", "lane", "integration_owner", "validation_depth"],
+  "properties": {
+    "extension_version": { "const": "1.0.0" },
+    "phase": { "type": "string", "minLength": 1 },
+    "lane": { "type": "string", "minLength": 1 },
+    "integration_owner": { "type": "string", "minLength": 1 },
+    "validation_depth": { "enum": ["inspection", "focused", "related", "broad", "live"] },
+    "mutation_surface": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "source_exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "boundary_ref", "allowed_inputs", "restricted_inputs"],
+      "properties": {
+        "mode": { "enum": ["task-context", "sanitized-spec-only"] },
+        "boundary_ref": { "type": "string", "minLength": 1 },
+        "allowed_inputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "restricted_inputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "stop_condition": { "type": "string", "minLength": 1 }
+  }
+}

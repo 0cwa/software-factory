@@ -1,0 +1,4 @@
+interface:
+  display_name: "Provenance Audit and Reset"
+  short_description: "Audit provenance and gate destructive resets"
+  default_prompt: "Use $provenance-audit-reset to audit repository provenance read-only and gate any requested reset safely."

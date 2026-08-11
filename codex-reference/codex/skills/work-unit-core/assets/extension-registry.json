@@ -1,0 +1,11 @@
+{
+  "registry_version": "1.0.0",
+  "extensions": {
+    "staged-workflows.orchestration": {
+      "schema": "../../staged-development-orchestrator/assets/staged-work-extension-v1.schema.json"
+    },
+    "staged-workflows.handoff": {
+      "schema": "../../resumable-handoff/assets/handoff-extension-v1.schema.json"
+    }
+  }
+}

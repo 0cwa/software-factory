@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "cycle-b",
+  "version": "1.0.0",
+  "name": "Cycle B",
+  "description": "Cycle fixture B.",
+  "tags": ["fixture"],
+  "inputSchema": { "type": "string" },
+  "outputSchema": { "type": "string" },
+  "steps": [
+    {
+      "id": "call-a",
+      "target": "pi_pe_pipeline_cycle-a.run",
+      "input": { "mode": "pass", "from": { "source": "pipeline_input" } }
+    }
+  ],
+  "createdAt": "2026-01-01T00:00:00Z",
+  "updatedAt": "2026-01-01T00:00:00Z"
+}

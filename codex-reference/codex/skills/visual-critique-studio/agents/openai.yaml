@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Critique Studio"
+  short_description: "Compare distinct visual directions with clear criteria"
+  default_prompt: "Use $visual-critique-studio to create distinct directions, critique them in context, and refine the selected one."

@@ -1,0 +1,30 @@
+name: protocol-conformance
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build:cli
+      - run: git diff --exit-code -- packages/pi-protocol/dist/pi-protocol.mjs
+      - run: npm test
+      - run: npm run benchmark:protocol
+      - name: Package tarball smoke test
+        run: |
+          TARBALL=$(npm pack --workspace @kybernetria/pi-protocol --silent)
+          test -s "$TARBALL"
+      - run: git diff --check

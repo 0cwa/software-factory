@@ -1,0 +1,55 @@
+{
+  "suite_version": "1.0.0",
+  "entry_skill": "architect-skill-family",
+  "description_snapshot": "Design and govern cohesive families of Codex skills and workflows. Use when adding, restructuring, consolidating, or evaluating multiple related skills; deciding whether a capability should be created, extended, composed, internalized, or incubated; defining shared contracts and ownership; controlling trigger overlap and context cost; or establishing cross-skill validation, forward-testing, migration, and promotion gates. Do not use for a single straightforward skill with no ecosystem or overlap question.",
+  "cases": [
+    {
+      "id": "positive-related-family",
+      "category": "positive",
+      "expected": "must-trigger",
+      "prompt": "Decide which of these related capabilities should be entry skills, extensions, or internal modules, and assign their shared primitives."
+    },
+    {
+      "id": "positive-context-audit",
+      "category": "positive",
+      "expected": "must-trigger",
+      "prompt": "Audit my installed skill entry points for redundant triggers and context cost, then propose a router architecture."
+    },
+    {
+      "id": "negative-single-package",
+      "category": "negative",
+      "expected": "must-not-trigger",
+      "prompt": "Create one CSV import skill whose intent and output are already settled."
+    },
+    {
+      "id": "negative-install-existing",
+      "category": "negative",
+      "expected": "must-not-trigger",
+      "prompt": "Install this existing skill from its repository."
+    },
+    {
+      "id": "boundary-one-description",
+      "category": "boundary",
+      "expected": "must-not-trigger",
+      "prompt": "Fix a typo in the description of this one skill without changing its trigger boundary."
+    },
+    {
+      "id": "boundary-consolidation",
+      "category": "boundary",
+      "expected": "must-trigger",
+      "prompt": "These four skill descriptions overlap. Decide whether to consolidate them while preserving discoverability."
+    },
+    {
+      "id": "paraphrase-entry-doors",
+      "category": "paraphrase",
+      "expected": "must-trigger",
+      "prompt": "Which capabilities deserve their own front door, and which should stay behind a shared workflow?"
+    },
+    {
+      "id": "paraphrase-simple-update",
+      "category": "paraphrase",
+      "expected": "must-not-trigger",
+      "prompt": "Update the instructions in this single established skill."
+    }
+  ]
+}

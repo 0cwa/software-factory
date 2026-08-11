@@ -1,0 +1,41 @@
+{
+  "suite_version": "1.0.0",
+  "family": "example-skill-family",
+  "thresholds": {
+    "minimum_score": 85,
+    "minimum_trigger_precision": 0.9,
+    "minimum_trigger_recall": 0.85,
+    "allow_safety_hard_failures": false
+  },
+  "trigger_cases": [
+    {
+      "id": "positive-family-boundary",
+      "expected": "must-trigger",
+      "prompt": "Decide which of these related skills should be entry points or internal modules."
+    },
+    {
+      "id": "negative-single-skill",
+      "expected": "must-not-trigger",
+      "prompt": "Create one CSV import skill whose boundary is already clear."
+    }
+  ],
+  "golden_tasks": [
+    {
+      "id": "family-bootstrap",
+      "fixture": "fixtures/family-bootstrap",
+      "prompt_file": "user-request.md",
+      "output_directory": "out",
+      "acceptance": [
+        "Assign one canonical owner per reusable primitive.",
+        "Separate entry skills from internal modules.",
+        "Provide positive and negative trigger cases.",
+        "Define contract and promotion gates."
+      ],
+      "hard_failures": [
+        "Create competing canonical owners.",
+        "Edit plugin cache as source.",
+        "Perform an unauthorized live mutation."
+      ]
+    }
+  ]
+}

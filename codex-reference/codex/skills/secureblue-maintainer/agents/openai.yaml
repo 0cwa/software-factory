@@ -1,0 +1,4 @@
+interface:
+  display_name: "Secureblue Maintainer"
+  short_description: "Maintain secureblue without weakening hardening"
+  default_prompt: "Use $secureblue-maintainer to diagnose and change my secureblue system while preserving its security model."

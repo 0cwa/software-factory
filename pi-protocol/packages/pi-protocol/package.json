@@ -1,0 +1,72 @@
+{
+  "name": "@kybernetria/pi-protocol",
+  "version": "4.0.0",
+  "description": "Pi Protocol — shared in-memory fabric with handler/agent execution, protocol tool, and pi SDK adapter",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "bin": {
+    "pi-protocol": "dist/pi-protocol.mjs",
+    "pi-protocol-check": "dist/pi-protocol.mjs",
+    "pi-protocol-generate": "dist/pi-protocol.mjs",
+    "pi-protocol-doctor": "dist/pi-protocol.mjs"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./contract": "./contract/index.ts",
+    "./core": "./core/index.ts",
+    "./provenance": "./provenance/index.ts",
+    "./conformance": "./conformance/index.ts",
+    "./pi": "./tool/index.ts",
+    "./pi/agents": "./sdk/agent-session.ts"
+  },
+  "files": [
+    "*.ts",
+    "contract/*",
+    "core/*.ts",
+    "cli/*.ts",
+    "conformance/*.ts",
+    "dist/*.mjs",
+    "provenance/*.ts",
+    "tool/*.ts",
+    "sdk/*.ts",
+    "prompts/*.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./extension.ts"
+    ]
+  },
+  "keywords": [
+    "pi-protocol",
+    "pi-extension",
+    "protocol-fabric"
+  ],
+  "author": "kybernetria",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kybernetria/pi-protocol.git",
+    "directory": "packages/pi-protocol"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "@earendil-works/pi-ai": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-ai": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "ajv": "8.18.0"
+  }
+}

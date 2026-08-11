@@ -1,0 +1,7 @@
+interface:
+  display_name: "Work Unit Core"
+  short_description: "Manage and validate work-unit ledgers"
+  default_prompt: "Use $work-unit-core to validate and update this work-unit ledger."
+
+policy:
+  allow_implicit_invocation: true

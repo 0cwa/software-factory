@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Composer"
+  short_description: "Merge multiple DOCX parts into one final document with style policy controls"
+  brand_color: "#115E59"
+  default_prompt: "Use $docx-docx-composer to merge DOCX files in order and handle style conflicts according to policy."

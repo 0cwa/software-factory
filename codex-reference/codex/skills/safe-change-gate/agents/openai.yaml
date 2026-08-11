@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Change Gate"
+  short_description: "Stage risky changes through dry-run and proof"
+  default_prompt: "Use $safe-change-gate to snapshot, plan, dry-run, authorize, apply, verify, and roll back this change safely."

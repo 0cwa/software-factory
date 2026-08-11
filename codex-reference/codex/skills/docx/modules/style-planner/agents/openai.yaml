@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Style Planner"
+  short_description: "Turn brand-led requirements into a structured DOCX block plan"
+  brand_color: "#0B7285"
+  default_prompt: "Use $docx-style-planner to convert content and design intent into a section plan for DOCX rendering."

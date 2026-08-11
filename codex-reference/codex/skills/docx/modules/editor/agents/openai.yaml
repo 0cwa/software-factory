@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Editor"
+  short_description: "Apply controlled DOCX revisions with explicit, traceable edit operations"
+  brand_color: "#075985"
+  default_prompt: "Use $docx-editor to apply surgical changes to an existing DOCX and return an explicit edit log."

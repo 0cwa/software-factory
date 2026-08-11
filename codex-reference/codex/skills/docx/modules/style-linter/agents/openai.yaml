@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Style Linter"
+  short_description: "Check style coverage, hierarchy, and spacing for generated DOCX files"
+  brand_color: "#134E4A"
+  default_prompt: "Use $docx-style-linter to validate a generated DOCX against style manifest constraints and output corrective actions."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "User-Local Installer Builder"
+  short_description: "Build reversible user-local installers with clean hosts"
+  default_prompt: "Use $user-local-installer-builder to design a turnkey user-local installer that builds in an ephemeral environment and leaves a verified uninstall path."

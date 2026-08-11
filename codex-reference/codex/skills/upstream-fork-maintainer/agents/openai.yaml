@@ -1,0 +1,4 @@
+interface:
+  display_name: "Upstream Fork Maintainer"
+  short_description: "Keep forks compatible without erasing their intent"
+  default_prompt: "Use $upstream-fork-maintainer to map this fork against upstream and plan the smallest compatible integrations."

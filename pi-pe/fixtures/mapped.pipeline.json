@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "mapped",
+  "version": "1.0.0",
+  "name": "Mapped example",
+  "description": "Maps pipeline input through two fixed fixture targets.",
+  "tags": ["example"],
+  "inputSchema": {
+    "type": "object",
+    "required": ["text"],
+    "properties": { "text": { "type": "string" } }
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["result"],
+    "properties": { "result": { "type": "string" } }
+  },
+  "dependencyPolicy": "pinned",
+  "steps": [
+    {
+      "id": "upper",
+      "target": "fixture.upper",
+      "input": {
+        "mode": "object",
+        "bindings": [
+          {
+            "to": "/text",
+            "from": { "source": "pipeline_input", "pointer": "/text" },
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrap",
+      "target": "fixture.wrap",
+      "input": {
+        "mode": "object",
+        "bindings": [
+          {
+            "to": "/value",
+            "from": { "source": "previous", "pointer": "/value" },
+            "required": true
+          }
+        ],
+        "constants": [{ "to": "/prefix", "value": "Result: " }]
+      }
+    }
+  ],
+  "createdAt": "2026-01-01T00:00:00Z",
+  "updatedAt": "2026-01-01T00:00:00Z"
+}

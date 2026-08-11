@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Friction Audit"
+  short_description: "Turn observed architecture friction into a narrow plan"
+  default_prompt: "Use $architecture-friction-audit to assess this concrete friction and recommend the smallest behavior-preserving response."

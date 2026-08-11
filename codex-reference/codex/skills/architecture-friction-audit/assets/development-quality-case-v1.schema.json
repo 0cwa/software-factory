@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/development-quality-case-v1.schema.json",
+  "title": "Development Quality Case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "case_id", "objective", "status", "trigger", "scope", "options", "decision", "blast_radius", "preservation_gates", "validation", "deferrals", "blockers", "next_action", "extensions"],
+  "properties": {
+    "contract_version": {"const": "1.0.0"},
+    "case_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "status": {"enum": ["draft", "assessing", "planned", "validating", "complete", "blocked"]},
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation", "evidence_refs", "recurrence"],
+      "properties": {
+        "observation": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "recurrence": {"enum": ["one-off", "repeated", "systemic", "unknown"]}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includes", "excludes", "constraints"],
+      "properties": {
+        "includes": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "excludes": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "constraints": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "summary", "expected_value", "effort", "risk", "reversibility", "tradeoffs"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1},
+          "expected_value": {"enum": ["high", "medium", "low", "unknown"]},
+          "effort": {"enum": ["small", "medium", "large", "unknown"]},
+          "risk": {"enum": ["low", "medium", "high", "unknown"]},
+          "reversibility": {"enum": ["easy", "moderate", "hard", "unknown"]},
+          "tradeoffs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "option_id", "rationale"],
+      "properties": {
+        "outcome": {"enum": ["pending", "proceed", "defer", "no-change", "blocked"]},
+        "option_id": {"type": ["string", "null"]},
+        "rationale": {"type": "string"}
+      }
+    },
+    "blast_radius": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "interfaces", "data", "users", "unknowns"],
+      "properties": {
+        "files": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "interfaces": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "data": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "users": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "unknowns": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "preservation_gates": {"$ref": "#/$defs/gates"},
+    "validation": {"$ref": "#/$defs/gates"},
+    "deferrals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "item", "reason", "upgrade_seam"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "item": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "upgrade_seam": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "owner", "next_check"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "next_check": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "next_action": {"type": "string", "minLength": 1},
+    "extensions": {"type": "object", "additionalProperties": true}
+  },
+  "$defs": {
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "criterion", "status", "evidence_refs"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "criterion": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pending", "passed", "failed", "not-applicable"]},
+          "command": {"type": ["string", "null"]},
+          "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

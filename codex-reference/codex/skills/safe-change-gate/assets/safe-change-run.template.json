@@ -1,0 +1,64 @@
+{
+  "contract_version": "1.0.0",
+  "run_id": "example-safe-change-run",
+  "objective": "Describe the intended target-state change.",
+  "mode": "dry-run",
+  "status": "draft",
+  "target": {
+    "kind": "provider-resource",
+    "locator": "redacted-or-nonsecret-locator",
+    "environment": "test",
+    "resolved_identity": null
+  },
+  "scope": {
+    "includes": [],
+    "excludes": []
+  },
+  "authority": {
+    "read": "allowed",
+    "write": "approval-required",
+    "external": "approval-required",
+    "live": "forbidden",
+    "destructive": "forbidden",
+    "privileged": "forbidden"
+  },
+  "snapshots": {
+    "before": null,
+    "after": null
+  },
+  "plan": {
+    "generated_from": null,
+    "operations": []
+  },
+  "dry_run": {
+    "status": "pending",
+    "command": null,
+    "exit_code": null,
+    "predicted_operation_ids": [],
+    "invariants": [],
+    "side_effects_detected": null
+  },
+  "approval": {
+    "required_dimensions": [
+      "write",
+      "external"
+    ],
+    "state": "not-requested",
+    "scope": null,
+    "observed_at": null
+  },
+  "apply_receipts": [],
+  "verification": {
+    "postconditions": [],
+    "unchanged_conditions": [],
+    "omissions": []
+  },
+  "rollback": {
+    "condition": null,
+    "procedure": null,
+    "required_dimensions": [],
+    "status": "not-planned"
+  },
+  "blockers": [],
+  "next_action": "Resolve the exact target and capture the before snapshot."
+}

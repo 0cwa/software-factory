@@ -1,0 +1,17 @@
+{
+  "contract_version": "1.0.0",
+  "case_id": "product-example",
+  "objective": "Find a purchasable product that meets an exact material requirement.",
+  "status": "complete",
+  "as_of": "2026-08-05T12:00:00Z",
+  "scope": {"includes": ["Products shipping to Sweden"], "excludes": ["Material substitutions"], "constraints": ["Material must be polyolefin"]},
+  "source_policy": {"primary": "required-when-available", "freshness": "required", "exceptions": []},
+  "questions": [{"id": "q1", "question": "Does Candidate A meet the material gate?", "scope": "Selected SKU", "status": "answered", "answer_claim_ids": ["c1"]}],
+  "claims": [{"id": "c1", "statement": "Candidate A is explicitly specified as polyolefin.", "status": "supported", "confidence": "high", "materiality": "required", "primary_evidence_required": true, "freshness_required": true}],
+  "sources": [{"id": "s1", "title": "Candidate A technical listing", "locator": "https://example.invalid/product-a#specifications", "source_type": "primary", "publisher": "Candidate A manufacturer", "published_at": null, "retrieved_at": "2026-08-05T11:45:00Z", "freshness": "current", "summary": "The selected SKU is described as polyolefin and available for delivery."}],
+  "evidence_links": [{"id": "e1", "claim_id": "c1", "source_id": "s1", "direction": "supports", "directness": "direct", "strength": "strong", "locator": "Specifications: Material", "note": "The exact selected SKU names polyolefin."}],
+  "counterevidence_checked": true,
+  "unresolved": [],
+  "conclusion": {"status": "recommendation", "summary": "Candidate A qualifies.", "confidence": "high", "decision_impact": "Include Candidate A in the verified result set.", "rationale_claim_ids": ["c1"]},
+  "extensions": {"evidence-review.discovery": {"constraints": [{"id": "material", "statement": "Material is explicitly polyolefin.", "priority": "hard"}], "candidates": [{"id": "candidate-a", "name": "Candidate A", "locator": "https://example.invalid/product-a", "qualification": "qualifies", "checked_at": "2026-08-05T11:45:00Z", "constraint_results": [{"constraint_id": "material", "status": "pass", "claim_id": "c1"}]}]}}
+}

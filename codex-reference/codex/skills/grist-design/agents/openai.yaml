@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grist Design"
+  short_description: "Design usable Grist app workflows"
+  brand_color: "#2563EB"
+  default_prompt: "Use $grist-design to redesign this Grist document into a clearer reviewer workflow."

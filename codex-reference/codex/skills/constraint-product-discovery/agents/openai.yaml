@@ -1,0 +1,4 @@
+interface:
+  display_name: "Constraint Product Discovery"
+  short_description: "Find products that satisfy every hard constraint"
+  default_prompt: "Use $constraint-product-discovery to find products that meet every hard constraint and reject near-matches."

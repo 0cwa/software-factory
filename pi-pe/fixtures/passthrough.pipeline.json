@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "passthrough",
+  "version": "1.0.0",
+  "name": "Pass-through example",
+  "description": "Passes a complete value through two compatible targets.",
+  "tags": ["example"],
+  "inputSchema": { "type": "string" },
+  "outputSchema": { "type": "string" },
+  "steps": [
+    {
+      "id": "first",
+      "target": "fixture.echo_one",
+      "input": { "mode": "pass", "from": { "source": "pipeline_input" } }
+    },
+    {
+      "id": "second",
+      "target": "fixture.echo_two",
+      "input": { "mode": "pass", "from": { "source": "previous" } }
+    }
+  ],
+  "createdAt": "2026-01-01T00:00:00Z",
+  "updatedAt": "2026-01-01T00:00:00Z"
+}

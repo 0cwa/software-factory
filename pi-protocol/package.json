@@ -1,0 +1,45 @@
+{
+  "name": "pi-protocol",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test:minimal-fabric": "tsx scripts/test-minimal-fabric.ts",
+    "test:minimal-fabric-pi-sdk-adapter": "tsx scripts/test-minimal-fabric-pi-sdk-adapter.ts",
+    "test:protocol-agent-p2p-context": "tsx scripts/test-protocol-agent-p2p-context.ts",
+    "test:minimal-pi-sdk-agent-adapter": "tsx scripts/test-pi-sdk-agent-adapter.ts",
+    "test:minimal-pi-sdk-agent-session-import": "tsx scripts/test-pi-sdk-agent-session-import.ts",
+    "test:real-agent-runtime": "tsx scripts/test-real-agent-runtime.ts",
+    "test:minimal-pi-tool-projection": "tsx scripts/test-minimal-pi-tool-projection.ts",
+    "test:pi-projection-v1": "tsx scripts/test-pi-projection-v1.ts",
+    "test:compact-protocol-tool": "tsx scripts/test-compact-protocol-tool.ts",
+    "test:protocol-renderer-bounds": "tsx scripts/test-protocol-renderer-bounds.ts",
+    "test:contract-model": "tsx scripts/test-contract-model.ts",
+    "test:atomic-registrations": "tsx scripts/test-atomic-registrations.ts",
+    "test:causal-provenance": "tsx scripts/test-causal-provenance.ts",
+    "test:delegated-control": "tsx scripts/test-delegated-control.ts",
+    "test:agent-profiles": "tsx scripts/test-agent-profiles.ts",
+    "test:core-import-boundary": "tsx scripts/test-core-import-boundary.ts",
+    "test:package-isolation": "tsx scripts/test-package-isolation.ts",
+    "test:conformance-cli": "tsx scripts/test-conformance-cli.ts",
+    "audit:extensions": "tsx scripts/audit-extension-manifests.ts",
+    "protocol:check": "tsx packages/pi-protocol/cli/bin.ts check",
+    "protocol:generate": "tsx packages/pi-protocol/cli/bin.ts generate",
+    "protocol:doctor": "tsx packages/pi-protocol/cli/bin.ts doctor",
+    "benchmark:protocol": "tsx scripts/benchmark-protocol.ts",
+    "evaluate:orchestration": "tsx scripts/evaluate-orchestration.ts",
+    "build:cli": "node scripts/build-cli.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run test:contract-model && npm run test:atomic-registrations && npm run test:causal-provenance && npm run test:delegated-control && npm run test:agent-profiles && npm run test:core-import-boundary && npm run test:minimal-fabric && npm run test:minimal-fabric-pi-sdk-adapter && npm run test:protocol-agent-p2p-context && npm run test:minimal-pi-sdk-agent-adapter && npm run test:minimal-pi-sdk-agent-session-import && npm run test:real-agent-runtime && npm run test:minimal-pi-tool-projection && npm run test:pi-projection-v1 && npm run test:compact-protocol-tool && npm run test:protocol-renderer-bounds && npm run test:conformance-cli && npm run test:package-isolation && npm run evaluate:orchestration"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.80.10",
+    "@earendil-works/pi-coding-agent": "^0.80.10",
+    "@earendil-works/pi-tui": "^0.80.10",
+    "esbuild": "^0.27.7",
+    "tsx": "^4.20.6",
+    "typescript": "^5.8.3"
+  }
+}

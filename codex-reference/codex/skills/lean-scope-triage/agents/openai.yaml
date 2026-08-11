@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lean Scope Triage"
+  short_description: "Find the thinnest complete high-value slice"
+  default_prompt: "Use $lean-scope-triage to reduce this plan to a robust 80/20 slice with explicit deferrals."

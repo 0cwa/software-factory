@@ -1,0 +1,23 @@
+{
+  "registry_version": "1.0.0",
+  "family": {
+    "id": "duplicate-contract-regression",
+    "purpose": "Prove that a versioned contract cannot have competing canonical owners.",
+    "workspace": ".codex/skill-family"
+  },
+  "contracts": [
+    {
+      "id": "work-unit",
+      "version": "1.0.0",
+      "owner": "work-unit-core",
+      "path": "contracts/work-unit-v1.schema.json"
+    },
+    {
+      "id": "work-unit",
+      "version": "1.0.0",
+      "owner": "architect-skill-family",
+      "path": "assets/work-unit-contract-v1.schema.json"
+    }
+  ],
+  "capabilities": []
+}

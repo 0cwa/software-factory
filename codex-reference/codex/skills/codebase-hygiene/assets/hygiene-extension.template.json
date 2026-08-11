@@ -1,0 +1,1 @@
+{"development-quality.hygiene":{"assets":[{"path":"path/to/asset","classification":"unknown","canonical_owner":null,"evidence_refs":[],"action":"retain","recovery":"not-applicable"}],"omission_check":"Re-inventory tracked and untracked paths after apply."}}

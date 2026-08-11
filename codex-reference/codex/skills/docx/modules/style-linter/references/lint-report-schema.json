@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": ["status", "file", "required_style_coverage", "render_report_status", "remediation", "recommend_handoff"],
+  "properties": {
+    "status": { "type": "string", "enum": ["ok", "warning", "fail"] },
+    "file": { "type": "string" },
+    "required_style_coverage": {
+      "type": "object",
+      "required": ["required", "present", "missing"],
+      "properties": {
+        "required": { "type": "integer", "minimum": 0 },
+        "present": { "type": "integer", "minimum": 0 },
+        "missing": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "render_report_status": { "type": "string", "enum": ["ok", "warning", "fail", "missing"] },
+    "fallback_warnings": { "type": "array", "items": { "type": "string" } },
+    "field_errors": { "type": "array", "items": { "type": "string" } },
+    "hierarchy_warnings": { "type": "array", "items": { "type": "string" } },
+    "spacing_warnings": { "type": "array", "items": { "type": "string" } },
+    "spacing_summary": { "type": "array", "items": { "type": "string" } },
+    "accessibility_warnings": { "type": "array", "items": { "type": "string" } },
+    "accessibility_summary": { "type": "array", "items": { "type": "string" } },
+    "page_budget_warnings": { "type": "array", "items": { "type": "string" } },
+    "remediation": { "type": "array", "items": { "type": "string" } },
+    "recommend_handoff": { "type": "string" },
+    "recommend_handoff_if_ok": { "type": "string" },
+    "plan_checks": { "type": "array", "items": { "type": "string" } }
+  }
+}

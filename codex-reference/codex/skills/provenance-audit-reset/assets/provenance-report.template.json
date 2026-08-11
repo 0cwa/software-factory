@@ -1,0 +1,31 @@
+{
+  "report_version": "1.0.0",
+  "objective": "Describe the provenance question without making a legal conclusion.",
+  "scope": {
+    "workspaces": [],
+    "refs": [],
+    "time_range": null,
+    "questioned_sources": [],
+    "includes": [],
+    "excludes": []
+  },
+  "coverage": {
+    "inspected": [],
+    "inaccessible": [],
+    "limitations": []
+  },
+  "findings": [],
+  "clean_room_boundary": {
+    "required": false,
+    "restricted_material": [],
+    "allowed_requirements": [],
+    "exposed_agents_or_workspaces": []
+  },
+  "remediation_options": [],
+  "selected_reset": null,
+  "safe_change_run": null,
+  "verification": [],
+  "unresolved": [],
+  "legal_review_recommended": false,
+  "next_action": "Complete the read-only scope and evidence inventory."
+}

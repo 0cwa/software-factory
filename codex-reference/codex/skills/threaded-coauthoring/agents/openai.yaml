@@ -1,0 +1,4 @@
+interface:
+  display_name: "Threaded Coauthoring"
+  short_description: "Integrate threads without losing authorship"
+  default_prompt: "Use $threaded-coauthoring to integrate these responses into the canonical docs and disposition every thread."

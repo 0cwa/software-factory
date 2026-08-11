@@ -1,0 +1,10 @@
+{
+  "contract_version":"1.0.0","case_id":"content-example","objective":"Make a confusing guide answer its primary reader question without losing detail.","status":"complete",
+  "audiences":[{"id":"new-reader","reader_goal":"Understand the main workflow before optional details."}],
+  "content_items":[{"id":"overview","reader_question":"What is the main workflow?","priority":"primary","destination":"guide.md#overview","source_refs":["guide.md"],"duplicate_of":null},{"id":"edge-cases","reader_question":"What uncommon exceptions exist?","priority":"secondary","destination":"guide.md#edge-cases disclosure","source_refs":["guide.md#notes"],"duplicate_of":null}],
+  "decisions":[{"id":"d1","decision":"Keep the workflow visible and move edge cases into a labeled disclosure.","rationale":"New readers need orientation before exceptions.","source_item_ids":["overview","edge-cases"],"status":"accepted"}],
+  "attribution":[{"item_id":"overview","origin":"source","author_ref":"guide.md","status":"accepted-edit"},{"item_id":"edge-cases","origin":"source","author_ref":"guide.md#notes","status":"accepted-edit"}],
+  "validation":[{"id":"meaning","criterion":"No source meaning is lost or duplicated.","status":"passed","evidence_refs":["inspection:before-after"]},{"id":"render","criterion":"Disclosure renders accessibly in light and dark themes.","status":"passed","evidence_refs":["render:light-dark"]}],
+  "unresolved":[],"next_action":"Publish the verified documentation edit when authorized.",
+  "extensions":{"content-collaboration.documentation":{"diagram_opportunities":[],"disclosures":[{"item_id":"edge-cases","label":"Edge cases and exceptions"}]}}
+}

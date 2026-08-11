@@ -1,0 +1,80 @@
+{
+  "contract_version": "1.0.0",
+  "run_id": "fixture-invalid-receipt",
+  "objective": "Exercise an incomplete apply receipt.",
+  "mode": "apply",
+  "status": "complete",
+  "target": {
+    "kind": "provider-resource",
+    "locator": "test/resource-123",
+    "environment": "test",
+    "resolved_identity": "resource-123"
+  },
+  "scope": {"includes": [{"id": "resource-123"}], "excludes": []},
+  "authority": {
+    "read": "allowed",
+    "write": "allowed",
+    "external": "allowed",
+    "live": "forbidden",
+    "destructive": "forbidden",
+    "privileged": "forbidden"
+  },
+  "snapshots": {
+    "before": {
+      "artifact_ref": "artifacts/fixture-before.json",
+      "digest": "sha256:before",
+      "captured_at": "2026-08-06T00:00:00Z",
+      "scope": "resource-123"
+    },
+    "after": {
+      "artifact_ref": "artifacts/fixture-after.json",
+      "digest": "sha256:after",
+      "captured_at": "2026-08-06T00:01:00Z",
+      "scope": "resource-123"
+    }
+  },
+  "plan": {
+    "generated_from": "artifacts/fixture-before.json",
+    "operations": [
+      {
+        "id": "op-update-resource-123",
+        "action": "update",
+        "target": "resource-123",
+        "expected_effect": "Update the fixture resource.",
+        "destructive": false,
+        "reversible": true,
+        "preconditions": []
+      }
+    ]
+  },
+  "dry_run": {
+    "status": "passed",
+    "command": "safe-change --dry-run",
+    "exit_code": 0,
+    "predicted_operation_ids": ["op-update-resource-123"],
+    "invariants": [{"status": "passed"}],
+    "side_effects_detected": false
+  },
+  "approval": {
+    "required_dimensions": ["write", "external"],
+    "state": "granted",
+    "scope": "op-update-resource-123",
+    "observed_at": "2026-08-06T00:00:30Z"
+  },
+  "apply_receipts": [
+    {"operation_id": "op-update-resource-123", "status": "applied", "result": "updated"}
+  ],
+  "verification": {
+    "postconditions": [{"status": "passed"}],
+    "unchanged_conditions": [{"status": "passed"}],
+    "omissions": []
+  },
+  "rollback": {
+    "condition": "Postcondition fails.",
+    "procedure": "Restore the before snapshot.",
+    "required_dimensions": ["write"],
+    "status": "ready"
+  },
+  "blockers": [],
+  "next_action": "Repair the receipt evidence before accepting completion."
+}

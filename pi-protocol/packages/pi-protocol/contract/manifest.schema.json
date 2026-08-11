@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pi.dev/protocol/manifest-v1.schema.json",
+  "title": "Pi Protocol Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "node", "provides"],
+  "properties": {
+    "$schema": { "const": "https://pi.dev/protocol/manifest-v1.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "node": { "$ref": "#/$defs/node" },
+    "$defs": { "$ref": "#/$defs/schemaMap" },
+    "provides": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/provide" }
+    },
+    "extensions": { "$ref": "#/$defs/extensions" }
+  },
+  "$defs": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 257,
+      "pattern": "^[a-z0-9][a-z0-9_-]*\\.[a-z0-9][a-z0-9_-]*$"
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+    },
+    "extensions": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": {
+        "minLength": 3,
+        "maxLength": 128,
+        "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+    },
+    "jsonValue": {
+      "type": ["null", "boolean", "number", "string", "array", "object"],
+      "items": { "$ref": "#/$defs/jsonValue" },
+      "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "purpose"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "tags": { "$ref": "#/$defs/tags" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "provide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "inputSchema", "outputSchema"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 8192 },
+        "inputSchema": { "$ref": "#/$defs/schemaNode" },
+        "outputSchema": { "$ref": "#/$defs/schemaNode" },
+        "tags": { "$ref": "#/$defs/tags" },
+        "effects": {
+          "type": "array",
+          "maxItems": 11,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "fs.read",
+              "fs.write",
+              "db.read",
+              "db.write",
+              "network.read",
+              "network.send",
+              "process.spawn",
+              "model.call",
+              "protocol.invoke",
+              "external.transaction",
+              "system.configure"
+            ]
+          }
+        },
+        "traits": { "$ref": "#/$defs/traits" },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "traits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "determinism": { "enum": ["deterministic", "best_effort"] },
+        "replay": { "enum": ["safe", "idempotent", "unsafe"] },
+        "interaction": { "enum": ["request_response", "continuable", "background"] },
+        "cancellable": { "type": "boolean" },
+        "streaming": { "type": "boolean" }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["active", "deprecated"] },
+        "deprecatedSince": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "sunsetAfter": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "replacement": { "$ref": "#/$defs/target" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      }
+    },
+    "schemaMap": {
+      "type": "object",
+      "maxProperties": 256,
+      "additionalProperties": { "$ref": "#/$defs/schemaNode" }
+    },
+    "schemaNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^#(?:/.*)?$"
+        },
+        "$defs": { "$ref": "#/$defs/schemaMap" },
+        "type": {
+          "oneOf": [
+            { "enum": ["object", "array", "string", "number", "integer", "boolean", "null"] },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "contains": { "const": "null" },
+              "minContains": 1,
+              "maxContains": 1,
+              "items": { "enum": ["object", "array", "string", "number", "integer", "boolean", "null"] }
+            }
+          ]
+        },
+        "required": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "type": "string", "maxLength": 256 }
+        },
+        "properties": { "$ref": "#/$defs/schemaMap" },
+        "additionalProperties": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "$ref": "#/$defs/schemaNode" }
+          ]
+        },
+        "items": { "$ref": "#/$defs/schemaNode" },
+        "enum": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/jsonValue" }
+        },
+        "const": { "$ref": "#/$defs/jsonValue" },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "exclusiveMinimum": { "type": "number" },
+        "exclusiveMaximum": { "type": "number" },
+        "multipleOf": { "type": "number", "exclusiveMinimum": 0 },
+        "minLength": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "maxLength": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "pattern": { "type": "string", "maxLength": 512 },
+        "minItems": { "type": "integer", "minimum": 0, "maximum": 100000 },
+        "maxItems": { "type": "integer", "minimum": 0, "maximum": 100000 },
+        "uniqueItems": { "type": "boolean" },
+        "minProperties": { "type": "integer", "minimum": 0, "maximum": 100000 },
+        "maxProperties": { "type": "integer", "minimum": 0, "maximum": 100000 },
+        "oneOf": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/schemaNode" }
+        },
+        "title": { "type": "string", "maxLength": 512 },
+        "description": { "type": "string", "maxLength": 8192 },
+        "examples": {
+          "type": "array",
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/jsonValue" }
+        },
+        "contentEncoding": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "contentMediaType": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "contentSchema": { "$ref": "#/$defs/schemaNode" },
+        "x-pi-sensitive": { "const": true }
+      }
+    }
+  }
+}

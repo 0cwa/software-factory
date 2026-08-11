@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mautic Native MJML"
+  short_description: "Build Mautic-safe MJML email themes"
+  default_prompt: "Use $mautic-native-mjml to create an editable Mautic GrapesJS email.html.twig theme that survives save and reopen."

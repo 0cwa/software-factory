@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/content-collaboration-case-v1.schema.json",
+  "title": "Content Collaboration Case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "case_id", "objective", "status", "audiences", "content_items", "decisions", "attribution", "validation", "unresolved", "next_action", "extensions"],
+  "properties": {
+    "contract_version": {"const": "1.0.0"},
+    "case_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "status": {"enum": ["draft", "mapping", "editing", "reviewing", "complete", "blocked"]},
+    "audiences": {"type": "array", "items": {"type": "object", "required": ["id", "reader_goal"], "properties": {"id": {"type": "string", "minLength": 1}, "reader_goal": {"type": "string", "minLength": 1}}, "additionalProperties": false}},
+    "content_items": {"type": "array", "items": {"type": "object", "required": ["id", "reader_question", "priority", "destination", "source_refs"], "properties": {"id": {"type": "string", "minLength": 1}, "reader_question": {"type": "string", "minLength": 1}, "priority": {"enum": ["primary", "secondary", "reference"]}, "destination": {"type": "string", "minLength": 1}, "source_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}, "duplicate_of": {"type": ["string", "null"]}}, "additionalProperties": false}},
+    "decisions": {"type": "array", "items": {"type": "object", "required": ["id", "decision", "rationale", "source_item_ids"], "properties": {"id": {"type": "string", "minLength": 1}, "decision": {"type": "string", "minLength": 1}, "rationale": {"type": "string", "minLength": 1}, "source_item_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}, "status": {"enum": ["proposed", "accepted", "rejected", "superseded"]}}, "additionalProperties": false}},
+    "attribution": {"type": "array", "items": {"type": "object", "required": ["item_id", "origin", "author_ref", "status"], "properties": {"item_id": {"type": "string", "minLength": 1}, "origin": {"enum": ["human", "agent", "mixed", "source"]}, "author_ref": {"type": "string", "minLength": 1}, "status": {"enum": ["instruction", "accepted-edit", "proposal", "question", "rejected"]}}, "additionalProperties": false}},
+    "validation": {"type": "array", "items": {"type": "object", "required": ["id", "criterion", "status", "evidence_refs"], "properties": {"id": {"type": "string", "minLength": 1}, "criterion": {"type": "string", "minLength": 1}, "status": {"enum": ["pending", "passed", "failed", "not-applicable"]}, "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}}, "additionalProperties": false}},
+    "unresolved": {"type": "array", "items": {"type": "object", "required": ["id", "question", "owner", "impact", "next_check"], "properties": {"id": {"type": "string", "minLength": 1}, "question": {"type": "string", "minLength": 1}, "owner": {"type": "string", "minLength": 1}, "impact": {"enum": ["blocking", "material", "minor"]}, "next_check": {"type": "string", "minLength": 1}}, "additionalProperties": false}},
+    "next_action": {"type": "string", "minLength": 1},
+    "extensions": {"type": "object", "additionalProperties": true}
+  }
+}

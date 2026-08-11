@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Style Renderer"
+  short_description: "Render a plan+manifest into a DOCX file with deterministic style mapping"
+  brand_color: "#155E75"
+  default_prompt: "Use $docx-style-renderer to generate a DOCX file from the style plan and manifest."

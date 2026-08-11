@@ -1,0 +1,1 @@
+{"content-collaboration.visual":{"criteria":["meaning","hierarchy","accessibility","theme behavior"],"variants":[{"id":"direction-a","hypothesis":"Emphasize sequence","render_refs":[],"disposition":"selected"},{"id":"direction-b","hypothesis":"Emphasize system relationships","render_refs":[],"disposition":"rejected"}],"selected_id":"direction-a","regression_refs":[]}}

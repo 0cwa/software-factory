@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evidence Decision Research"
+  short_description: "Research evidence into a concrete decision"
+  default_prompt: "Use $evidence-decision-research to compare these options with current evidence and recommend a decision."

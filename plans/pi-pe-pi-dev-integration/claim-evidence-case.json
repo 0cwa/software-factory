@@ -1,0 +1,357 @@
+{
+  "contract_version": "1.0.0",
+  "case_id": "pi-pe-pi-dev-boundary-2026-08-08",
+  "objective": "Decide where Pi-PE fits between Pi Protocol, Pi-Dev, and the software-factory workflow principles, and select the smallest safe integration path.",
+  "status": "complete",
+  "as_of": "2026-08-08T12:00:00+02:00",
+  "scope": {
+    "includes": [
+      "Current local implementations of pi-protocol, pi-pe, pi-dev, and the SSSF workflow principles",
+      "Package ownership, composition boundaries, compatibility blockers, provenance, and first implementation slice"
+    ],
+    "excludes": [
+      "Installing dependencies or executing package tests",
+      "Designing DAG, distributed, or human-approval infrastructure"
+    ],
+    "constraints": [
+      "Run on pi-coding-agent through Pi Protocol",
+      "Keep pipeline definitions data-only and fail closed",
+      "Do not duplicate canonical authority or provenance",
+      "Preserve independently callable Pi-Dev roles"
+    ]
+  },
+  "source_policy": {
+    "primary": "required-when-available",
+    "freshness": "context-dependent",
+    "exceptions": []
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Which package should own each layer of the combined system?",
+      "scope": "Capability kernel, deterministic pipeline execution, and development workflow semantics",
+      "status": "answered",
+      "answer_claim_ids": ["c1", "c2", "c3", "c4", "c7"]
+    },
+    {
+      "id": "q2",
+      "question": "What blocks immediate Pi-PE composition of Pi-Dev roles?",
+      "scope": "Current schema, mapping, receipt, and cancellation implementations",
+      "status": "answered",
+      "answer_claim_ids": ["c5", "c6"]
+    },
+    {
+      "id": "q3",
+      "question": "What is the smallest safe implementation slice?",
+      "scope": "A read-only scout-to-architect planning workflow",
+      "status": "answered",
+      "answer_claim_ids": ["c5", "c6", "c7"]
+    }
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Pi Protocol is the capability, authority, session, receipt, and provenance kernel and explicitly is not a workflow engine.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c2",
+      "statement": "Pi-PE already owns deterministic data-only linear pipeline validation, mapping, bounded execution, dependency pinning, definition persistence, reconciliation, and generated protocol registration.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c3",
+      "statement": "Pi-PE does not own work-unit lifecycle, development acceptance gates, same-session correction, workspace policy, or durable resumable run state, and its explicit limits make it a poor owner for those domain semantics.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c4",
+      "statement": "Pi-Dev currently owns independently callable software-development roles and deliberately has no hidden orchestrator, making an explicit discoverable workflow layer a domain extension rather than an implicit behavior change.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c5",
+      "statement": "Immediate Pi-PE/Pi-Dev composition is blocked by Pi-PE's narrow persisted schema subset because Pi-Dev contracts use canonical keywords such as maxLength and maxItems.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c6",
+      "statement": "Pi-PE currently extracts the tracked invocation result without retaining canonical receipt metadata, so receipt projection and outcome-unknown behavior require focused integration work before traces can serve as workflow evidence.",
+      "status": "supported",
+      "confidence": "medium",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    },
+    {
+      "id": "c7",
+      "statement": "The best current option is to keep Pi-PE generic and compose it beneath an explicit Pi-Dev development-workflow layer, without merging the packages or creating a new generic workflow package yet.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "title": "Pi Protocol README",
+      "locator": "pi-protocol/README.md:3-32,154-171",
+      "source_type": "primary",
+      "publisher": "Local Pi Protocol repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Defines Pi Protocol as a capability kernel, says it is not a workflow engine, and documents canonical tracked receipts and provenance."
+    },
+    {
+      "id": "s2",
+      "title": "Pi-PE README and pipeline types",
+      "locator": "pi-pe/README.md:3-24,246-299; pi-pe/src/types.ts:75-183",
+      "source_type": "primary",
+      "publisher": "Local Pi-PE repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Defines deterministic linear pipeline features, persistence, execution details, zero retries, and explicit v1 limitations."
+    },
+    {
+      "id": "s3",
+      "title": "Pi-Dev README",
+      "locator": "pi-dev/README.md:3-11,38-64",
+      "source_type": "primary",
+      "publisher": "Local Pi-Dev repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Defines the five development roles, their safety boundaries, and the deliberate absence of a hidden orchestrator."
+    },
+    {
+      "id": "s4",
+      "title": "Pi-PE schema validator",
+      "locator": "pi-pe/src/schemas.ts:38-50,264-285",
+      "source_type": "primary",
+      "publisher": "Local Pi-PE repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Rejects schema keywords outside Pi-PE's narrow JsonSchemaLite subset and validates persisted dependency snapshots."
+    },
+    {
+      "id": "s5",
+      "title": "Pi-Dev public protocol manifest",
+      "locator": "pi-dev/pi.protocol.json:13-185",
+      "source_type": "primary",
+      "publisher": "Local Pi-Dev repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Uses canonical bounded schema keywords including maxLength and maxItems and shows the scout/architect shape mismatch."
+    },
+    {
+      "id": "s6",
+      "title": "Pi-PE executor",
+      "locator": "pi-pe/src/pipeline/execute.ts:45-227,235-251",
+      "source_type": "primary",
+      "publisher": "Local Pi-PE repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Shows fail-fast linear execution and that invokeWithAbort returns tracked.result while step traces omit the receipt."
+    },
+    {
+      "id": "s7",
+      "title": "Super Simple Software Factory README",
+      "locator": "README.md:18-43,217-245",
+      "source_type": "primary",
+      "publisher": "Local SSSF repository",
+      "published_at": "2026-08-08",
+      "retrieved_at": "2026-08-08T12:00:00+02:00",
+      "freshness": "current",
+      "summary": "Defines code-owned sequencing, typed envelopes, postcondition gates, durable traces, and same-session correction as workflow-layer principles."
+    }
+  ],
+  "evidence_links": [
+    {
+      "id": "e1",
+      "claim_id": "c1",
+      "source_id": "s1",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "README lines 3-32 and 154-171",
+      "note": "The package declares its kernel boundary and canonical receipt ownership."
+    },
+    {
+      "id": "e2",
+      "claim_id": "c2",
+      "source_id": "s2",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "README feature and limitation sections; PipelineSpecV1 and execution detail types",
+      "note": "The implemented DSL and runtime align with a generic deterministic pipeline layer."
+    },
+    {
+      "id": "e3",
+      "claim_id": "c3",
+      "source_id": "s2",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "README lines 264-299 and types lines 155-183",
+      "note": "The package explicitly has no retries, rollback, branches, or durable run model beyond returned execution details."
+    },
+    {
+      "id": "e4",
+      "claim_id": "c3",
+      "source_id": "s7",
+      "direction": "supports",
+      "directness": "inferred",
+      "strength": "strong",
+      "locator": "README lines 18-43 and 217-245",
+      "note": "The required development workflow semantics are materially broader than Pi-PE pipeline execution."
+    },
+    {
+      "id": "e5",
+      "claim_id": "c4",
+      "source_id": "s3",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "README lines 3-11",
+      "note": "Pi-Dev owns roles and explicitly documents the absence of hidden orchestration."
+    },
+    {
+      "id": "e6",
+      "claim_id": "c5",
+      "source_id": "s4",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "schemas.ts lines 38-50 and 264-285",
+      "note": "Pi-PE rejects unsupported keys and validates persisted dependencies."
+    },
+    {
+      "id": "e7",
+      "claim_id": "c5",
+      "source_id": "s5",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "manifest lines 13-185",
+      "note": "Pi-Dev schemas use maxLength and maxItems, which Pi-PE's subset rejects."
+    },
+    {
+      "id": "e8",
+      "claim_id": "c6",
+      "source_id": "s6",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "execute.ts lines 235-251",
+      "note": "The tracked call is reduced to its result before PipelineExecutor builds step traces."
+    },
+    {
+      "id": "e9",
+      "claim_id": "c7",
+      "source_id": "s1",
+      "direction": "supports",
+      "directness": "inferred",
+      "strength": "moderate",
+      "locator": "README package boundary and provenance sections",
+      "note": "The kernel already owns generic invocation concerns, so a new workflow layer should compose through it."
+    },
+    {
+      "id": "e10",
+      "claim_id": "c7",
+      "source_id": "s2",
+      "direction": "supports",
+      "directness": "inferred",
+      "strength": "strong",
+      "locator": "README features and limitations",
+      "note": "Pi-PE is already a coherent reusable lower-level engine whose explicit limits should be preserved."
+    },
+    {
+      "id": "e11",
+      "claim_id": "c7",
+      "source_id": "s3",
+      "direction": "contradicts",
+      "directness": "direct",
+      "strength": "moderate",
+      "locator": "README line 11",
+      "note": "Adding workflows to Pi-Dev could contradict its no-orchestrator intent unless the new layer is explicit, optional, and discoverable."
+    },
+    {
+      "id": "e12",
+      "claim_id": "c7",
+      "source_id": "s7",
+      "direction": "supports",
+      "directness": "inferred",
+      "strength": "strong",
+      "locator": "README lines 18-43 and 217-245",
+      "note": "Development lifecycle semantics belong in code above bounded agent phases, not in the generic capability kernel."
+    }
+  ],
+  "counterevidence_checked": true,
+  "unresolved": [],
+  "conclusion": {
+    "status": "recommendation",
+    "summary": "Keep Pi-PE as the generic deterministic pipeline engine and compose it beneath an explicit Pi-Dev workflow layer. Fix schema interoperability and receipt preservation first; then ship a read-only scout-adapter-architect plan-change workflow.",
+    "confidence": "high",
+    "decision_impact": "Avoid a new generic workflow package and avoid merging Pi-PE into Pi-Dev. Sequence implementation around compatibility, provenance, deterministic handoff, pipeline provisioning, and finally development lifecycle semantics.",
+    "rationale_claim_ids": ["c1", "c2", "c3", "c4", "c5", "c6", "c7"]
+  },
+  "extensions": {
+    "evidence-review.decision": {
+      "options": [
+        {
+          "id": "option-a",
+          "label": "Extend Pi-PE into the complete development workflow plane",
+          "claim_ids": ["c2", "c3"],
+          "disqualified": true
+        },
+        {
+          "id": "option-b",
+          "label": "Keep Pi-PE generic and add explicit Pi-Dev workflow semantics",
+          "claim_ids": ["c1", "c2", "c3", "c4", "c5", "c6", "c7"],
+          "disqualified": false
+        },
+        {
+          "id": "option-c",
+          "label": "Merge Pi-PE into Pi-Dev",
+          "claim_ids": ["c2", "c4"],
+          "disqualified": true
+        },
+        {
+          "id": "option-d",
+          "label": "Create a new generic workflow package now",
+          "claim_ids": ["c1", "c3", "c4"],
+          "disqualified": true
+        }
+      ],
+      "selected_option_id": "option-b"
+    }
+  }
+}

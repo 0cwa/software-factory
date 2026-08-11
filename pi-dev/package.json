@@ -1,0 +1,58 @@
+{
+  "name": "pi-dev",
+  "version": "0.1.0",
+  "description": "Profile-backed scout, architect, worker, and reviewer agents exposed through Pi Protocol.",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi-protocol",
+    "agents"
+  ],
+  "exports": {
+    ".": "./extension.ts",
+    "./runtime": "./src/runtime/run-agent.ts",
+    "./definitions": "./src/roles/index.ts"
+  },
+  "files": [
+    "extension.ts",
+    "pi.protocol.json",
+    "protocol",
+    "src",
+    "test",
+    "tsconfig.json",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --preserve-symlinks --import tsx --test test/*.test.ts",
+    "protocol:check": "pi-protocol check .",
+    "protocol:generate": "pi-protocol generate ."
+  },
+  "pi": {
+    "extensions": [
+      "./extension.ts"
+    ]
+  },
+  "piProtocol": {
+    "generated": "protocol.generated.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "^0.80.7",
+    "@kybernetria/pi-protocol": "https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.80.10",
+    "@earendil-works/pi-tui": "^0.80.10",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.6",
+    "typebox": "^1.0.65",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

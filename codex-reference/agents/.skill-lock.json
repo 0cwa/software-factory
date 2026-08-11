@@ -1,0 +1,41 @@
+{
+  "version": 3,
+  "skills": {
+    "microsandbox": {
+      "source": "superradcompany/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/superradcompany/skills.git",
+      "skillPath": "microsandbox/SKILL.md",
+      "skillFolderHash": "578e976e857e7fb5cd1a48316df95cbc1939331d",
+      "installedAt": "2026-07-28T12:58:08.384Z",
+      "updatedAt": "2026-07-28T12:58:08.384Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "76a98a285cb0434f3d39e1a873823556330e398b",
+      "installedAt": "2026-07-28T12:58:11.919Z",
+      "updatedAt": "2026-07-28T12:58:11.919Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "antigravity-cli",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-code-cli",
+    "opencode",
+    "warp",
+    "zed"
+  ]
+}

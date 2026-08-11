@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Design Stylist"
+  short_description: "Translate brand emotions into concrete DOCX design tokens through conversation"
+  brand_color: "#0F766E"
+  default_prompt: "Use $docx-design-stylist to interview the user about brand feeling, translate taste into a concrete design manifest, and output a structured style spec for DOCX rendering."

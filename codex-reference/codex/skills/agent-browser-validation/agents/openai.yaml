@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Browser Validation"
+  short_description: "Make real browser acceptance paths agent-runnable"
+  default_prompt: "Use $agent-browser-validation to design the lightest agent-runnable browser test for this acceptance gap."

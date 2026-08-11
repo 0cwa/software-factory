@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resumable Handoff"
+  short_description: "Write an executable continuation artifact"
+  default_prompt: "Use $resumable-handoff to preserve current state and select the next action."

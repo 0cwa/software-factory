@@ -1,0 +1,837 @@
+{
+  "$schema": "https://pi.dev/protocol/manifest-v1.schema.json",
+  "schemaVersion": 1,
+  "node": {
+    "id": "pi_dev",
+    "purpose": "Specialized profile-backed scout, architect, implementation worker, and reviewer agents operating in the host session working directory.",
+    "tags": [
+      "agents",
+      "software-development"
+    ]
+  },
+  "provides": [
+    {
+      "name": "scout",
+      "description": "Quickly locate relevant files, trace code paths, and return concise read-only findings.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "files",
+          "codePaths",
+          "findings",
+          "unresolvedQuestions",
+          "diagnostics",
+          "message"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "relevance"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "relevance": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "codePaths": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "from",
+                "to",
+                "relationship"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "to": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "relationship": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "unresolvedQuestions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "additionalProperties": false
+      },
+      "effects": [
+        "fs.read",
+        "model.call"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    },
+    {
+      "name": "architect",
+      "description": "Analyze a task with a read-only agent and return an implementation architecture and acceptance criteria.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "assumptions",
+          "plan",
+          "risks",
+          "acceptanceCriteria",
+          "diagnostics",
+          "message"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "plan": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "order",
+                "action",
+                "rationale"
+              ],
+              "properties": {
+                "order": {
+                  "type": "integer"
+                },
+                "action": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "rationale": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "risk",
+                "mitigation"
+              ],
+              "properties": {
+                "risk": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "mitigation": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "acceptanceCriteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "additionalProperties": false
+      },
+      "effects": [
+        "fs.read",
+        "model.call",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    },
+    {
+      "name": "worker",
+      "description": "Implement a task directly in the host session working directory with file mutation, shell, and test capabilities.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "plan": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "acceptanceCriteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "changedFiles",
+          "tests",
+          "unresolvedIssues",
+          "diagnostics",
+          "message"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "changedFiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "change"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "change": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "command",
+                "status",
+                "output"
+              ],
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "passed",
+                    "failed",
+                    "skipped"
+                  ],
+                  "maxLength": 65536
+                },
+                "output": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "unresolvedIssues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "additionalProperties": false
+      },
+      "effects": [
+        "fs.read",
+        "fs.write",
+        "process.spawn",
+        "model.call",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "unsafe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    },
+    {
+      "name": "reviewer",
+      "description": "Review source and git changes without source-edit tools; may inspect diffs and run constrained tests.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "diff": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "commit": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "range": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "acceptanceCriteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "testExpectations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "verdict",
+          "findings",
+          "testResults",
+          "diagnostics",
+          "message"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "request_changes",
+              "blocked"
+            ],
+            "maxLength": 65536
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "severity",
+                "file",
+                "explanation",
+                "recommendedFix"
+              ],
+              "properties": {
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "blocker",
+                    "high",
+                    "medium",
+                    "low",
+                    "info"
+                  ],
+                  "maxLength": 65536
+                },
+                "file": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "explanation": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "recommendedFix": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "testResults": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "command",
+                "status",
+                "output"
+              ],
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "passed",
+                    "failed",
+                    "skipped"
+                  ],
+                  "maxLength": 65536
+                },
+                "output": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "additionalProperties": false
+      },
+      "effects": [
+        "fs.read",
+        "process.spawn",
+        "model.call",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    },
+    {
+      "name": "security_reviewer",
+      "description": "Review source and git changes for security vulnerabilities without source-edit tools; may inspect diffs and run constrained tests.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "diff": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "commit": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "range": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "acceptanceCriteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "testExpectations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "securityFocus": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "verdict",
+          "threatModel",
+          "findings",
+          "testResults",
+          "diagnostics",
+          "message"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "request_changes",
+              "blocked"
+            ],
+            "maxLength": 65536
+          },
+          "threatModel": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "asset",
+                "threat",
+                "mitigation"
+              ],
+              "properties": {
+                "asset": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "threat": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "mitigation": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "severity",
+                "area",
+                "file",
+                "exploitability",
+                "explanation",
+                "recommendedFix"
+              ],
+              "properties": {
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "blocker",
+                    "high",
+                    "medium",
+                    "low",
+                    "info"
+                  ],
+                  "maxLength": 65536
+                },
+                "area": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "file": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "exploitability": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "maxLength": 65536
+                },
+                "explanation": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "recommendedFix": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "testResults": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "command",
+                "status",
+                "output"
+              ],
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "passed",
+                    "failed",
+                    "skipped"
+                  ],
+                  "maxLength": 65536
+                },
+                "output": {
+                  "type": "string",
+                  "maxLength": 65536
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "maxItems": 256
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "additionalProperties": false
+      },
+      "effects": [
+        "fs.read",
+        "process.spawn",
+        "model.call",
+        "protocol.invoke"
+      ],
+      "traits": {
+        "determinism": "best_effort",
+        "replay": "safe",
+        "interaction": "request_response",
+        "cancellable": true
+      }
+    }
+  ]
+}

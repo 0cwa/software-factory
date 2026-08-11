@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architect Skill Family"
+  short_description: "Govern cohesive skill ecosystems"
+  default_prompt: "Use $architect-skill-family to design a cohesive, testable family of related Codex skills."

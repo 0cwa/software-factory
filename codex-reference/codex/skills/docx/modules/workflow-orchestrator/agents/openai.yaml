@@ -1,0 +1,5 @@
+interface:
+  display_name: "DOCX Workflow Orchestrator"
+  short_description: "Coordinate full DOCX workflows with subagents, research/compliance, state gates, and final handoff validation"
+  brand_color: "#0C4A6E"
+  default_prompt: "Use $docx-workflow-orchestrator for a full DOCX workflow. Spawn specialist subagents, maintain the workflow state ledger, run research/compliance when required, and do not mark complete until all required gates pass."

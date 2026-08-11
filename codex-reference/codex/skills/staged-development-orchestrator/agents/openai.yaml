@@ -1,0 +1,4 @@
+interface:
+  display_name: "Staged Development Orchestrator"
+  short_description: "Coordinate dependency-aware development stages"
+  default_prompt: "Use $staged-development-orchestrator to turn this objective into staged, verifiable work."

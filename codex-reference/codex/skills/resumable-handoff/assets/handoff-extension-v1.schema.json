@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/handoff-extension-v1.schema.json",
+  "title": "staged-workflows.handoff extension v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["extension_version", "decisions", "resume_checks"],
+  "properties": {
+    "extension_version": { "const": "1.0.0" },
+    "source_state": { "type": "string" },
+    "authority_notes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "state", "owner"],
+        "properties": {
+          "decision": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["accepted", "rejected", "unresolved", "superseded"] },
+          "owner": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "resume_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "expected", "authority"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "expected": { "type": "string", "minLength": 1 },
+          "authority": {
+            "description": "Authority dimension projected from the work unit. Use write for new records; local-write remains a v1 compatibility alias.",
+            "enum": ["read", "write", "local-write", "external", "live", "destructive"]
+          }
+        }
+      }
+    }
+  }
+}

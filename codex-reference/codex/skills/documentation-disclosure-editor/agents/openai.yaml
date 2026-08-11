@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentation Disclosure Editor"
+  short_description: "Restructure docs with useful diagrams and disclosure"
+  default_prompt: "Use $documentation-disclosure-editor to audit these docs and improve their hierarchy, diagrams, and progressive disclosure."

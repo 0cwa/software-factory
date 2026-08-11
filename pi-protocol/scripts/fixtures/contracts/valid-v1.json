@@ -1,0 +1,37 @@
+{
+  "$schema": "https://pi.dev/protocol/manifest-v1.schema.json",
+  "schemaVersion": 1,
+  "node": {
+    "id": "fixture_node",
+    "purpose": "Canonical contract fixture.",
+    "tags": ["fixture"]
+  },
+  "provides": [
+    {
+      "name": "echo",
+      "description": "Return validated text.",
+      "tags": ["fixture"],
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "x-pi-sensitive": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "contract_version": "1.0.0",
+  "case_id": "decision-example",
+  "objective": "Choose between two implementation approaches.",
+  "status": "complete",
+  "as_of": "2026-08-05T12:00:00Z",
+  "scope": {
+    "includes": ["Current supported implementation paths"],
+    "excludes": ["Unmaintained experimental paths"],
+    "constraints": ["Must preserve current compatibility"]
+  },
+  "source_policy": {
+    "primary": "required-when-available",
+    "freshness": "context-dependent",
+    "exceptions": []
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Which option meets the compatibility requirement?",
+      "scope": "Supported current versions",
+      "status": "answered",
+      "answer_claim_ids": ["c1"]
+    }
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Option A preserves the required compatibility.",
+      "status": "supported",
+      "confidence": "high",
+      "materiality": "required",
+      "primary_evidence_required": true,
+      "freshness_required": true
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "title": "Current compatibility specification",
+      "locator": "https://example.invalid/spec#compatibility",
+      "source_type": "primary",
+      "publisher": "Example project",
+      "published_at": "2026-08-01",
+      "retrieved_at": "2026-08-05T11:30:00Z",
+      "freshness": "current",
+      "summary": "The specification lists Option A as compatible with the required versions."
+    }
+  ],
+  "evidence_links": [
+    {
+      "id": "e1",
+      "claim_id": "c1",
+      "source_id": "s1",
+      "direction": "supports",
+      "directness": "direct",
+      "strength": "strong",
+      "locator": "Compatibility table, Option A row",
+      "note": "The named versions match the decision constraint."
+    }
+  ],
+  "counterevidence_checked": true,
+  "unresolved": [],
+  "conclusion": {
+    "status": "recommendation",
+    "summary": "Choose Option A.",
+    "confidence": "high",
+    "decision_impact": "Implement Option A and retain the compatibility test.",
+    "rationale_claim_ids": ["c1"]
+  },
+  "extensions": {
+    "evidence-review.decision": {
+      "options": [
+        {"id": "option-a", "label": "Option A", "claim_ids": ["c1"], "disqualified": false},
+        {"id": "option-b", "label": "Option B", "claim_ids": [], "disqualified": true}
+      ],
+      "selected_option_id": "option-a"
+    }
+  }
+}

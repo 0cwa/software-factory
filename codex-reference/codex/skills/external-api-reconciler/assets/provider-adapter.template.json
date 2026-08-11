@@ -1,0 +1,41 @@
+{
+  "adapter_version": "1.0.0",
+  "provider": "example-provider",
+  "api_version": "unknown",
+  "tenant_locator": "nonsecret-locator",
+  "credential": {
+    "mechanism": "token",
+    "required_scopes": [],
+    "redaction_rules": []
+  },
+  "pagination": {
+    "model": "unknown",
+    "page_size": null,
+    "completeness_signal": null
+  },
+  "identity": {
+    "stable_fields": [],
+    "mutable_display_fields": [],
+    "uniqueness_rules": []
+  },
+  "relationships": [],
+  "mutable_fields": [],
+  "immutable_fields": [],
+  "server_defaults": [],
+  "rate_limits": {
+    "observed_headers": [],
+    "retry_semantics": "unknown"
+  },
+  "idempotency": {
+    "supported": null,
+    "strategy": null
+  },
+  "delete_restore": {
+    "cascade_behavior": "unknown",
+    "restore_behavior": "unknown"
+  },
+  "disposable_fixtures": {
+    "supported": null,
+    "cleanup_required": true
+  }
+}

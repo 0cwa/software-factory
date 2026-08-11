@@ -1,0 +1,17 @@
+{
+  "contract_version": "1.0.0",
+  "case_id": "review-example",
+  "objective": "Verify supplied review findings against the current revision.",
+  "status": "complete",
+  "as_of": "2026-08-05T12:00:00Z",
+  "scope": {"includes": ["Finding F1"], "excludes": ["Fresh broad review"], "constraints": ["Keep fixes minimal"]},
+  "source_policy": {"primary": "required-when-available", "freshness": "required", "exceptions": []},
+  "questions": [{"id": "q1", "question": "Does the current code still contain F1?", "scope": "Current revision", "status": "answered", "answer_claim_ids": ["c1"]}],
+  "claims": [{"id": "c1", "statement": "The current code still contains the behavior described by F1.", "status": "refuted", "confidence": "high", "materiality": "required", "primary_evidence_required": true, "freshness_required": true}],
+  "sources": [{"id": "s1", "title": "Current source inspection", "locator": "src/example.py:10", "source_type": "observed", "publisher": "Current workspace", "published_at": null, "retrieved_at": "2026-08-05T11:45:00Z", "freshness": "current", "summary": "The referenced behavior is absent in the current revision."}],
+  "evidence_links": [{"id": "e1", "claim_id": "c1", "source_id": "s1", "direction": "contradicts", "directness": "direct", "strength": "strong", "locator": "src/example.py:10", "note": "The replacement path no longer performs the alleged operation."}],
+  "counterevidence_checked": true,
+  "unresolved": [],
+  "conclusion": {"status": "not-applicable", "summary": "F1 is stale; no code change is needed.", "confidence": "high", "decision_impact": "Skip F1 and report the current source evidence.", "rationale_claim_ids": ["c1"]},
+  "extensions": {"evidence-review.review": {"findings": [{"id": "F1", "claim_id": "c1", "disposition": "stale", "action": "skipped", "evidence_link_ids": ["e1"], "validation_refs": []}]}}
+}

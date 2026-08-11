@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "agents": {
+    "scout": {
+      "prompt": "./prompts/scout.md",
+      "tools": [
+        "read",
+        "grep",
+        "find",
+        "ls"
+      ],
+      "modelPolicy": {
+        "class": "fast",
+        "specific": "openai-codex/gpt-5.6-luna",
+        "thinkingLevel": "low"
+      },
+      "continuation": {
+        "ttlMs": 900000,
+        "maxSessions": 8
+      }
+    },
+    "architect": {
+      "prompt": "./prompts/architect.md",
+      "tools": [
+        "read",
+        "grep",
+        "find",
+        "ls",
+        "protocol"
+      ],
+      "modelPolicy": {
+        "class": "reasoning",
+        "specific": "openai-codex/gpt-5.6-sol",
+        "thinkingLevel": "high"
+      },
+      "continuation": {
+        "ttlMs": 900000,
+        "maxSessions": 8
+      },
+      "protocolAccess": {
+        "targets": [
+          "pi_dev.scout"
+        ],
+        "maxDepth": 4,
+        "maxInvocations": 16
+      }
+    },
+    "worker": {
+      "prompt": "./prompts/worker.md",
+      "tools": [
+        "read",
+        "grep",
+        "find",
+        "ls",
+        "bash",
+        "edit",
+        "write",
+        "protocol"
+      ],
+      "modelPolicy": {
+        "class": "balanced",
+        "specific": "openai-codex/gpt-5.6-luna",
+        "thinkingLevel": "high"
+      },
+      "continuation": {
+        "ttlMs": 900000,
+        "maxSessions": 8
+      },
+      "protocolAccess": {
+        "targets": [
+          "pi_dev.scout"
+        ],
+        "maxDepth": 4,
+        "maxInvocations": 16
+      }
+    },
+    "reviewer": {
+      "prompt": "./prompts/reviewer.md",
+      "tools": [
+        "read",
+        "grep",
+        "find",
+        "ls",
+        "bash",
+        "protocol"
+      ],
+      "modelPolicy": {
+        "class": "reasoning",
+        "specific": "openai-codex/gpt-5.6-luna",
+        "thinkingLevel": "high"
+      },
+      "continuation": {
+        "ttlMs": 900000,
+        "maxSessions": 8
+      },
+      "protocolAccess": {
+        "targets": [
+          "pi_dev.scout"
+        ],
+        "maxDepth": 4,
+        "maxInvocations": 16
+      }
+    },
+    "security_reviewer": {
+      "prompt": "./prompts/security-reviewer.md",
+      "tools": [
+        "read",
+        "grep",
+        "find",
+        "ls",
+        "bash",
+        "protocol"
+      ],
+      "modelPolicy": {
+        "class": "reasoning",
+        "specific": "openai-codex/gpt-5.6-sol",
+        "thinkingLevel": "medium"
+      },
+      "continuation": {
+        "ttlMs": 900000,
+        "maxSessions": 8
+      },
+      "protocolAccess": {
+        "targets": [
+          "pi_dev.scout"
+        ],
+        "maxDepth": 4,
+        "maxInvocations": 16
+      }
+    }
+  }
+}

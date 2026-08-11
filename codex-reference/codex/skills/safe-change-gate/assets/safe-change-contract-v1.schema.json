@@ -1,0 +1,527 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/codex/safe-change-run-v1.schema.json",
+  "title": "Safe Change Run v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_version",
+    "run_id",
+    "objective",
+    "mode",
+    "status",
+    "target",
+    "scope",
+    "authority",
+    "snapshots",
+    "plan",
+    "dry_run",
+    "approval",
+    "apply_receipts",
+    "verification",
+    "rollback",
+    "blockers",
+    "next_action"
+  ],
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nullableString": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nonEmptyObject": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": true
+    },
+    "scopeValue": {
+      "oneOf": [
+        { "$ref": "#/$defs/nonEmptyString" },
+        { "$ref": "#/$defs/nonEmptyObject" },
+        { "type": "array", "minItems": 1 }
+      ]
+    },
+    "nullableScopeValue": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/scopeValue" }
+      ]
+    },
+    "authorityDimension": {
+      "enum": ["read", "write", "external", "live", "destructive", "privileged"]
+    },
+    "authorityState": {
+      "enum": ["allowed", "read-only", "approval-required", "forbidden", "unknown"]
+    },
+    "scopeItem": {
+      "$ref": "#/$defs/nonEmptyObject"
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["pending", "passed", "failed"]
+        }
+      }
+    },
+    "passedCondition": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": { "const": "passed" }
+      }
+    },
+    "omission": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["explained", "restored", "unresolved"]
+        }
+      }
+    },
+    "resolvedOmission": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["explained", "restored"]
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["artifact_ref", "digest", "captured_at", "scope"],
+      "properties": {
+        "artifact_ref": { "$ref": "#/$defs/nonEmptyString" },
+        "digest": { "$ref": "#/$defs/nonEmptyString" },
+        "captured_at": { "$ref": "#/$defs/nonEmptyString" },
+        "scope": { "$ref": "#/$defs/scopeValue" }
+      }
+    },
+    "nullableSnapshot": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/snapshot" }
+      ]
+    },
+    "precondition": {
+      "oneOf": [
+        { "$ref": "#/$defs/nonEmptyString" },
+        { "$ref": "#/$defs/nonEmptyObject" }
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "action",
+        "target",
+        "expected_effect",
+        "destructive",
+        "reversible",
+        "preconditions"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "action": { "$ref": "#/$defs/nonEmptyString" },
+        "target": { "$ref": "#/$defs/nonEmptyString" },
+        "expected_effect": { "$ref": "#/$defs/nonEmptyString" },
+        "destructive": { "type": "boolean" },
+        "reversible": { "type": "boolean" },
+        "preconditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/precondition" }
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["operation_id", "status", "result", "evidence_location", "observed_at"],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/nonEmptyString" },
+        "status": {
+          "enum": ["applied", "skipped", "failed"]
+        },
+        "result": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonEmptyString" },
+            { "$ref": "#/$defs/nonEmptyObject" }
+          ]
+        },
+        "evidence_location": { "$ref": "#/$defs/nonEmptyString" },
+        "observed_at": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "blocker": {
+      "oneOf": [
+        { "$ref": "#/$defs/nonEmptyString" },
+        { "$ref": "#/$defs/nonEmptyObject" }
+      ]
+    }
+  },
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "run_id": { "$ref": "#/$defs/nonEmptyString" },
+    "objective": { "$ref": "#/$defs/nonEmptyString" },
+    "mode": { "enum": ["read-only", "dry-run", "apply"] },
+    "status": {
+      "enum": [
+        "draft",
+        "snapshotted",
+        "planned",
+        "dry-run-verified",
+        "approved",
+        "applying",
+        "verifying",
+        "complete",
+        "rolled-back",
+        "blocked"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "locator", "environment", "resolved_identity"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "locator": { "$ref": "#/$defs/nonEmptyString" },
+        "environment": { "$ref": "#/$defs/nonEmptyString" },
+        "resolved_identity": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nonEmptyString" },
+            { "type": "number" },
+            { "$ref": "#/$defs/nonEmptyObject" }
+          ]
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["includes", "excludes"],
+      "properties": {
+        "includes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scopeItem" }
+        },
+        "excludes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scopeItem" }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["read", "write", "external", "live", "destructive", "privileged"],
+      "properties": {
+        "read": { "$ref": "#/$defs/authorityState" },
+        "write": { "$ref": "#/$defs/authorityState" },
+        "external": { "$ref": "#/$defs/authorityState" },
+        "live": { "$ref": "#/$defs/authorityState" },
+        "destructive": { "$ref": "#/$defs/authorityState" },
+        "privileged": { "$ref": "#/$defs/authorityState" }
+      }
+    },
+    "snapshots": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["before", "after"],
+      "properties": {
+        "before": { "$ref": "#/$defs/nullableSnapshot" },
+        "after": { "$ref": "#/$defs/nullableSnapshot" }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generated_from", "operations"],
+      "properties": {
+        "generated_from": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nonEmptyString" },
+            { "$ref": "#/$defs/nonEmptyObject" }
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/operation" }
+        }
+      }
+    },
+    "dry_run": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "status",
+        "command",
+        "exit_code",
+        "predicted_operation_ids",
+        "invariants",
+        "side_effects_detected"
+      ],
+      "properties": {
+        "status": { "enum": ["pending", "passed", "failed"] },
+        "command": { "$ref": "#/$defs/nullableString" },
+        "exit_code": { "type": ["integer", "null"] },
+        "predicted_operation_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "invariants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition" }
+        },
+        "side_effects_detected": { "type": ["boolean", "null"] }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["required_dimensions", "state", "scope", "observed_at"],
+      "properties": {
+        "required_dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/authorityDimension" }
+        },
+        "state": {
+          "enum": ["not-needed", "not-requested", "requested", "granted", "denied"]
+        },
+        "scope": { "$ref": "#/$defs/nullableScopeValue" },
+        "observed_at": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "apply_receipts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/receipt" }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["postconditions", "unchanged_conditions", "omissions"],
+      "properties": {
+        "postconditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition" }
+        },
+        "unchanged_conditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition" }
+        },
+        "omissions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/omission" }
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["condition", "procedure", "required_dimensions", "status"],
+      "properties": {
+        "condition": { "$ref": "#/$defs/nullableString" },
+        "procedure": { "$ref": "#/$defs/nullableString" },
+        "required_dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/authorityDimension" }
+        },
+        "status": {
+          "enum": ["not-planned", "planned", "ready", "in-progress", "completed", "failed"]
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/blocker" }
+    },
+    "next_action": { "$ref": "#/$defs/nonEmptyString" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "snapshotted",
+              "planned",
+              "dry-run-verified",
+              "approved",
+              "applying",
+              "verifying",
+              "complete"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "snapshots": {
+            "properties": {
+              "before": { "$ref": "#/$defs/snapshot" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "planned",
+              "dry-run-verified",
+              "approved",
+              "applying",
+              "verifying",
+              "complete"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "plan": {
+            "properties": {
+              "operations": { "minItems": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "dry-run-verified",
+              "approved",
+              "applying",
+              "verifying",
+              "complete"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dry_run": {
+            "properties": {
+              "status": { "const": "passed" },
+              "exit_code": { "const": 0 },
+              "invariants": {
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/passedCondition" }
+              },
+              "side_effects_detected": { "const": false }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["approved", "applying", "verifying", "complete"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "required_dimensions": { "minItems": 1 }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "state": { "const": "granted" }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["applying", "verifying", "complete"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": { "const": "apply" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "const": "complete" }
+        }
+      },
+      "then": {
+        "properties": {
+          "snapshots": {
+            "properties": {
+              "after": { "$ref": "#/$defs/snapshot" }
+            }
+          },
+          "verification": {
+            "properties": {
+              "postconditions": {
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/passedCondition" }
+              },
+              "omissions": {
+                "items": { "$ref": "#/$defs/resolvedOmission" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "const": "rolled-back" }
+        }
+      },
+      "then": {
+        "properties": {
+          "rollback": {
+            "properties": {
+              "status": { "const": "completed" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codebase Hygiene"
+  short_description: "Curate canonical assets and safe cleanup plans"
+  default_prompt: "Use $codebase-hygiene to inventory this repository and propose evidence-backed retain, ignore, archive, and cleanup actions."
