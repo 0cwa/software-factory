@@ -1,0 +1,52 @@
+{
+  // Personal/project defaults for work in 0cwa/software-factory.
+  "schemaVersion": 1,
+  "id": "software-factory-dev",
+  "repository": "0cwa/software-factory",
+  "coordinatingIssue": "https://github.com/0cwa/software-factory/issues/1",
+  "preferredWorkflow": {
+    "provider": "software-factory",
+    "workflow": "develop-github-issue",
+    "variant": "direct-protocol"
+  },
+  "sourceModePreference": [
+    "workspace-sibling",
+    "registry-exact",
+    "exact-git"
+  ],
+  "requiredCapabilities": [
+    "workflow.software-factory",
+    "workspace.git-worktree",
+    "protocol.invocation",
+    "role.repository-scout",
+    "role.software-architect",
+    "role.code-worker",
+    "role.code-reviewer",
+    "source.github-read",
+    "source.github-draft-pr-write",
+    "quality.node-typescript"
+  ],
+  "conditionalCapabilities": {
+    "protocolIntegration": ["provider.pi-protocol", "provider.pi-dev"],
+    "pipelineVariant": ["provider.pi-pe"],
+    "taskplaneVariant": ["provider.taskplane"],
+    "securitySensitive": ["role.security-reviewer"],
+    "selfHosting": ["evaluation.protected-controller", "recovery.standalone"]
+  },
+  "factoryRoot": ".pi/factory",
+  "protectedPaths": [
+    ".pi/factory/policies/",
+    ".pi/factory/evaluations/held-out/",
+    "developer-harness-config/prompts/00-constitution.md",
+    "developer-harness-config/policies/"
+  ],
+  "qualityCommands": [
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm lint",
+    "pnpm architecture:check"
+  ],
+  "defaultIntegration": "draft-pull-request",
+  "environmentMutation": "foundry-proposal-required",
+  "automaticMerge": false
+}
