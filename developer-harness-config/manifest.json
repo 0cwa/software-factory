@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-harness-config",
+  "status": "transitional-branch",
+  "source": {
+    "repository": "0cwa/software-factory",
+    "branch": "developer-harness-config",
+    "root": "developer-harness-config"
+  },
+  "purpose": "Layered, secret-free configuration for issue-driven autonomous development of Pi Foundry and Software Factory.",
+  "entrypoints": {
+    "bootstrap": "AGENTS.md",
+    "constitution": "prompts/00-constitution.md",
+    "programPlan": "plans/program.md",
+    "sourceMap": "sources.json"
+  },
+  "protected": [
+    "prompts/00-constitution.md",
+    "policies/authority.jsonc",
+    "policies/permissions.jsonc",
+    "policies/promotion.jsonc",
+    "policies/retention.jsonc",
+    "evaluations/**"
+  ],
+  "portableIncludes": [
+    "AGENTS.md",
+    "sources.json",
+    "prompts/**",
+    "plans/README.md",
+    "plans/program.md",
+    "profiles/**",
+    "policies/**",
+    "toolsets/**",
+    "evaluations/**",
+    "templates/**"
+  ],
+  "excludes": [
+    "**/.env",
+    "**/*token*",
+    "**/*credential*",
+    "**/*private-key*",
+    "**/sessions/**",
+    "**/history/**",
+    "**/logs/**",
+    "**/*.sqlite*",
+    "**/cache/**",
+    "**/locks/**",
+    "**/runtime/**"
+  ],
+  "authorities": {
+    "environment": "pi-foundry",
+    "softwareWorkflow": "software-factory",
+    "capabilityInvocation": "pi-protocol",
+    "workBacklog": "github-issues",
+    "promotion": "foundry-proposal-and-repository-pr"
+  },
+  "migration": {
+    "target": "private-repository",
+    "mustPreserveRelativePaths": true,
+    "requiresDigestAndBehaviorVerification": true
+  }
+}
