@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-permissions-policy",
+  "protected": true,
+  "defaults": {
+    "projectScope": true,
+    "globalMutation": "deny",
+    "targetBranchWrites": "deny",
+    "automaticMerge": false,
+    "shellProfileOrPathEdits": "deny",
+    "secretValuesInTrackedOrPromptState": "deny",
+    "network": "declared-destinations-and-purpose-only",
+    "lifecycleScripts": "explicit-reviewed-decision-only",
+    "unknownPermission": "deny"
+  },
+  "workspace": {
+    "mutationBackend": "factory-owned-git-worktree",
+    "engineerActiveTree": "read-only-by-default",
+    "preExistingDirtyState": "preserve",
+    "protectedPaths": [
+      ".pi/factory/policies/",
+      ".pi/factory/evaluations/held-out/",
+      "developer-harness-config/prompts/00-constitution.md",
+      "developer-harness-config/policies/",
+      "pi-foundry.lock.json"
+    ],
+    "candidateMayWriteOnlyIssueApprovedPaths": true
+  },
+  "capabilities": {
+    "runtimeGrantMustBeSubsetOfFoundryEnvironmentReceipt": true,
+    "workflowMayMintOrBroadenPrincipal": false,
+    "issueOrModelMayInstallTools": false,
+    "extensionToolsRequireExplicitPhaseAllowlist": true,
+    "reviewersReadOnlyByDefault": true
+  },
+  "separateApprovalRequired": [
+    "global-mutation",
+    "path-or-shell-profile-change",
+    "new-lifecycle-script",
+    "new-network-source-or-destination",
+    "secret-reference-change",
+    "destructive-operation",
+    "not-rollbackable-operation",
+    "authority-expansion",
+    "protected-self-hosting-change"
+  ],
+  "candidateForbiddenWrites": [
+    "active-workflow-during-own-evaluation",
+    "evaluator-or-held-out-task",
+    "permission-budget-retention-promotion-policy",
+    "operational-evidence-or-negative-results",
+    "foundry-active-lock-or-transaction-policy",
+    "protocol-host-authority-implementation",
+    "credentials-or-auth-state"
+  ],
+  "breachBehavior": "stop-quarantine-preserve-evidence-no-normal-correction-loop"
+}
