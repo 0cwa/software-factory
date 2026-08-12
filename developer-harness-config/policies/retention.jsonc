@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-retention-policy",
+  "protected": true,
+  "contentCapture": {
+    "fullPrompts": "off-by-default",
+    "fullModelMessages": "off-by-default",
+    "fullToolArgumentsAndResults": "off-by-default",
+    "secretValues": "never",
+    "defaultRetained": [
+      "stable-identities-and-digests",
+      "sizes-counts-timing-status",
+      "bounded-diagnostic-and-output-tail",
+      "artifact-and-protocol-receipt-references",
+      "gate-checks-and-evidence-validity",
+      "candidate-and-promotion-lineage"
+    ]
+  },
+  "bounds": {
+    "perFieldChars": 20000,
+    "perDiagnosticChars": 4000,
+    "perProcessInlineOutputChars": 20000,
+    "perRunBytes": 268435456,
+    "projectRuntimeBytes": 2147483648,
+    "maxRetainedCompletedRuns": 100,
+    "maxRetainedRawDays": 30,
+    "maxRetainedCandidateRawDays": 60
+  },
+  "pinning": [
+    "active-run",
+    "recoverable-or-outcome-unknown-run",
+    "accepted-not-integrated-candidate",
+    "active-evaluation",
+    "promotion-or-rollback-window",
+    "explicit-owner-pin"
+  ],
+  "afterRawExpiry": {
+    "retainBoundedSummary": true,
+    "retainDigestsAndLineage": true,
+    "retainHardGateAndPredictionOutcome": true,
+    "deleteSecretsOrUnapprovedContent": true
+  },
+  "cleanup": {
+    "symlinkOrJunctionSafe": true,
+    "deleteOnlyProvenOwnedState": true,
+    "previewBeforeDestructiveApply": true,
+    "doNotCleanLiveProcessOrPinnedRun": true,
+    "storageFaultBehavior": "bounded-degraded-record-no-false-acceptance"
+  },
+  "githubComments": {
+    "includeFullLogs": false,
+    "includeSecrets": false,
+    "includeBoundedCheckSummaryAndArtifactRefs": true
+  }
+}
