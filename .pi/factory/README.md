@@ -4,4 +4,4 @@
 
 Runtime-owned execution state belongs under `.pi/factory/runtime/`. That directory is intentionally ignored and is not a source of product authority; see [ADR-0001](../../docs/adr/0001-product-authority-and-reference-boundary.md).
 
-SF-0 establishes this boundary only. It does not add package code or runtime behavior.
+The workspace currently contains the deployable `@kybernetria/software-factory` package scaffold. Its entry point and CLI are placeholders only; domain contracts, workflow, runtime, Protocol integration, and CLI behavior are intentionally deferred.
