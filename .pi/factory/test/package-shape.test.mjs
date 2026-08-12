@@ -13,5 +13,5 @@ test("exports the deployable package entry", async () => {
 
 test("declares a harmless CLI placeholder", () => {
   assert.deepEqual(packageJson.bin, { "software-factory": "./dist/cli.js" });
-  assert.deepEqual(packageJson.files, ["dist", "README.md"]);
+  assert.deepEqual(packageJson.files, ["dist", "README.md", "workflows", "prompts"]);
 });

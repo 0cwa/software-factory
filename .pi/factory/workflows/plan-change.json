@@ -1,0 +1,78 @@
+{
+  "id": "plan-change",
+  "version": 1,
+  "entryPhaseId": "request",
+  "maxTraversalSteps": 8,
+  "phases": [
+    {
+      "id": "request",
+      "kind": "request",
+      "label": "Request",
+      "maxInputBytes": 65536,
+      "maxOutputBytes": 65536
+    },
+    {
+      "id": "scout",
+      "kind": "capability",
+      "label": "Pi-Dev scout",
+      "target": "pi_dev.scout",
+      "promptAsset": "plan-change-scout.md",
+      "maxInputBytes": 131072,
+      "maxOutputBytes": 262144
+    },
+    {
+      "id": "handoff",
+      "kind": "adapter",
+      "label": "Bounded scout-to-architect handoff",
+      "adapter": "scout_to_architect_request",
+      "maxInputBytes": 262144,
+      "maxOutputBytes": 131072
+    },
+    {
+      "id": "architect",
+      "kind": "capability",
+      "label": "Pi-Dev architect",
+      "target": "pi_dev.architect",
+      "promptAsset": "plan-change-architect.md",
+      "maxInputBytes": 262144,
+      "maxOutputBytes": 262144
+    },
+    {
+      "id": "gates",
+      "kind": "gate",
+      "label": "Deterministic plan gates",
+      "maxInputBytes": 262144,
+      "maxOutputBytes": 65536
+    },
+    {
+      "id": "accepted",
+      "kind": "terminal",
+      "label": "Accepted",
+      "maxInputBytes": 65536,
+      "maxOutputBytes": 65536,
+      "terminalOutcome": "accepted"
+    },
+    {
+      "id": "rejected",
+      "kind": "terminal",
+      "label": "Rejected",
+      "maxInputBytes": 65536,
+      "maxOutputBytes": 65536,
+      "terminalOutcome": "rejected"
+    }
+  ],
+  "transitions": [
+    { "id": "request-to-scout", "from": "request", "to": "scout", "guard": "always" },
+    { "id": "scout-to-handoff", "from": "scout", "to": "handoff", "guard": "execution-succeeded" },
+    { "id": "handoff-to-architect", "from": "handoff", "to": "architect", "guard": "execution-succeeded" },
+    { "id": "architect-to-gates", "from": "architect", "to": "gates", "guard": "execution-succeeded" },
+    { "id": "gates-to-accepted", "from": "gates", "to": "accepted", "guard": "acceptance-passed" },
+    { "id": "gates-to-rejected", "from": "gates", "to": "rejected", "guard": "acceptance-failed" }
+  ],
+  "guards": [
+    { "id": "always", "condition": "always" },
+    { "id": "execution-succeeded", "condition": "execution_succeeded" },
+    { "id": "acceptance-passed", "condition": "acceptance_passed" },
+    { "id": "acceptance-failed", "condition": "acceptance_failed" }
+  ]
+}

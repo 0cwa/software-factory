@@ -18,7 +18,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "workflows",
+    "prompts"
   ],
   "scripts": {
     "build": "tsc",
