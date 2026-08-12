@@ -1,0 +1,48 @@
+{
+  // Personal/project defaults for work in 0cwa/pi-foundry.
+  "schemaVersion": 1,
+  "id": "pi-foundry-dev",
+  "repository": "0cwa/pi-foundry",
+  "coordinatingIssue": "https://github.com/0cwa/pi-foundry/issues/1",
+  "preferredWorkflow": {
+    "provider": "software-factory",
+    "workflow": "develop-github-issue",
+    "variant": "direct-protocol"
+  },
+  "sourceModePreference": [
+    "workspace-sibling",
+    "registry-exact",
+    "exact-git"
+  ],
+  "requiredCapabilities": [
+    "workflow.software-factory",
+    "workspace.git-worktree",
+    "protocol.invocation",
+    "role.repository-scout",
+    "role.software-architect",
+    "role.code-worker",
+    "role.code-reviewer",
+    "source.github-read",
+    "source.github-draft-pr-write",
+    "quality.node-typescript"
+  ],
+  "conditionalCapabilities": {
+    "securitySensitive": ["role.security-reviewer"],
+    "packageOrRegistry": ["source.npm-registry-read", "artifact.content-addressed"],
+    "crossPlatform": ["quality.cross-platform-fixtures"],
+    "currentResearch": ["research.web-primary-sources"]
+  },
+  "protectedPaths": [
+    ".pi/factory/policies/",
+    ".pi/factory/evaluations/held-out/",
+    "pi-foundry.lock.json"
+  ],
+  "qualityCommands": [
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm lint"
+  ],
+  "defaultIntegration": "draft-pull-request",
+  "environmentMutation": "foundry-proposal-required",
+  "automaticMerge": false
+}
