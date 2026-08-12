@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-promotion-policy",
+  "protected": true,
+  "candidateStates": [
+    "draft",
+    "validated",
+    "statically-analyzed",
+    "evaluating",
+    "promotable",
+    "rejected",
+    "inconclusive",
+    "blocked",
+    "stale",
+    "promotion-proposed",
+    "promoted",
+    "rolled-back",
+    "superseded",
+    "retired"
+  ],
+  "hardGates": [
+    "exact-source-and-candidate-identity",
+    "valid-workflow-schema-and-paths",
+    "one-top-level-workflow-authority",
+    "workspace-and-protected-path-compliance",
+    "current-nonstale-required-tests-and-reviews",
+    "no-unresolved-effectful-outcome",
+    "permission-and-effect-policy",
+    "recovery-cancellation-truthfulness",
+    "storage-redaction-retention-bounds",
+    "protected-evaluator-and-held-out-integrity",
+    "held-out-anti-overfitting-policy",
+    "rollback-or-explicit-nonrollbackable-approval"
+  ],
+  "behavioralEvidence": {
+    "heldInRequired": true,
+    "heldOutRequiredForDefaultOrBroadPromotion": true,
+    "repeatsWhenVarianceMaterial": true,
+    "cacheStatusExplicit": true,
+    "negativeResultsRetained": true,
+    "scalarScoreMayOverrideHardGate": false
+  },
+  "promotionAuthorities": {
+    "repositoryCodeWorkflowPrompt": "draft-pr-and-repository-approval",
+    "environmentPackageProviderVariant": "pi-foundry-exact-proposal-and-transaction",
+    "combined": "ordered-pr-and-foundry-proposal"
+  },
+  "automaticActions": {
+    "classifyPromotable": true,
+    "openDraftPullRequest": true,
+    "merge": false,
+    "changeFoundryActiveLock": false,
+    "changeDefaultProvider": false,
+    "deleteNegativeEvidence": false
+  },
+  "selfHosting": {
+    "controller": "prior-trusted-runtime-policy-evaluator",
+    "standaloneRecoveryRequired": true,
+    "explicitOwnerApprovalForAuthorityOrEvaluatorChange": true,
+    "inProcessSelfReplacement": false
+  }
+}
