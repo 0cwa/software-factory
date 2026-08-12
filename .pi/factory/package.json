@@ -24,9 +24,12 @@
   ],
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --allowImportingTsExtensions",
     "test": "pnpm build && node --test test/*.test.mjs",
     "check:package": "pnpm build && pnpm pack --dry-run"
+  },
+  "dependencies": {
+    "@kybernetria/pi-protocol": "https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz"
   },
   "devDependencies": {
     "@types/node": "24.5.2",

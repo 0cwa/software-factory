@@ -9,6 +9,10 @@ importers:
   .: {}
 
   .pi/factory:
+    dependencies:
+      '@kybernetria/pi-protocol':
+        specifier: https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz
+        version: https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz
     devDependencies:
       '@types/node':
         specifier: 24.5.2
@@ -19,8 +23,40 @@ importers:
 
 packages:
 
+  '@kybernetria/pi-protocol@https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz':
+    resolution: {integrity: sha512-isZL8EH2TUNppqItrq1sfJ03d0YPeembYQHGaslUlAaUsCAV3N/JK0pR0sPPsE0qFZATPS+s89AX7dUDs6JA6Q==, tarball: https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz}
+    version: 4.0.0
+    hasBin: true
+    peerDependencies:
+      '@earendil-works/pi-ai': '*'
+      '@earendil-works/pi-coding-agent': '*'
+      '@earendil-works/pi-tui': '*'
+    peerDependenciesMeta:
+      '@earendil-works/pi-ai':
+        optional: true
+      '@earendil-works/pi-coding-agent':
+        optional: true
+      '@earendil-works/pi-tui':
+        optional: true
+
   '@types/node@24.5.2':
     resolution: {integrity: sha512-FYxk1I7wPv3K2XBaoyH2cTnocQEu8AOZ60hPbsyukMPLv5/5qr7V1i8PLHdl6Zf87I+xZXFvPCXYjiTFq+YSDQ==}
+
+  ajv@8.18.0:
+    resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
+
+  fast-deep-equal@3.1.3:
+    resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
+
+  fast-uri@3.1.5:
+    resolution: {integrity: sha512-gHwA1O9LDIcKunMKhObS/HimwtehO1nPUECKAu5TpKgaO19fcWEl4bliWe1jWxVFvIXztJjjQ4L8XQ1EU9f7Jw==}
+
+  json-schema-traverse@1.0.0:
+    resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+
+  require-from-string@2.0.2:
+    resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
+    engines: {node: '>=0.10.0'}
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -32,9 +68,28 @@ packages:
 
 snapshots:
 
+  '@kybernetria/pi-protocol@https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz':
+    dependencies:
+      ajv: 8.18.0
+
   '@types/node@24.5.2':
     dependencies:
       undici-types: 7.12.0
+
+  ajv@8.18.0:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-uri: 3.1.5
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
+
+  fast-deep-equal@3.1.3: {}
+
+  fast-uri@3.1.5: {}
+
+  json-schema-traverse@1.0.0: {}
+
+  require-from-string@2.0.2: {}
 
   typescript@5.9.3: {}
 

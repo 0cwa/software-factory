@@ -45,11 +45,11 @@ export interface ArtifactRef { readonly id: string; readonly kind: "file" | "rep
 export interface CapabilityInvocation {
   readonly runId: string; readonly phaseId: "scout" | "architect"; readonly target: CapabilityTarget; readonly input: unknown;
   readonly inputDigest: string; readonly workflowDigest: string; readonly prompt: ArtifactRef;
-  readonly repositoryIdentityDigest: string; readonly environmentIdentityDigest: string; readonly signal?: AbortSignal;
+  readonly repositoryIdentityDigest: string; readonly environmentIdentityDigest: string; readonly signal?: AbortSignal; readonly deadline?: number;
 }
 export interface CapabilitySuccess { readonly status: "succeeded"; readonly output: unknown; readonly receipt: unknown; }
 export interface CapabilityFailure { readonly status: "failed"; readonly diagnostics: readonly Diagnostic[]; readonly receipt?: unknown; }
-export interface CapabilityOutcomeUnknown { readonly status: "outcome_unknown"; readonly diagnostics: readonly Diagnostic[]; }
+export interface CapabilityOutcomeUnknown { readonly status: "outcome_unknown"; readonly diagnostics: readonly Diagnostic[]; readonly receipt?: unknown; }
 export type CapabilityDispatchResult = CapabilitySuccess | CapabilityFailure | CapabilityOutcomeUnknown;
 export interface CapabilityPort { dispatch(target: CapabilityTarget, invocation: CapabilityInvocation): Promise<CapabilityDispatchResult>; }
 export interface GateCheck { readonly id: string; readonly passed: boolean; readonly explanation: string; }

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { hostname, tmpdir } from "node:os";
 import { promisify } from "node:util";
 import test from "node:test";
-import { createPlanChangeRuntime, loadPlanChangeCatalog, RuntimeRepository } from "../dist/index.js";
+import { createPiProtocolCapabilityPort, createPlanChangeRuntime, loadPlanChangeCatalog, RuntimeRepository } from "../dist/index.js";
 
 const exec = promisify(execFile);
 const catalog = await loadPlanChangeCatalog();
@@ -37,42 +37,81 @@ function architect({ complete = true } = {}) {
   };
 }
 
-function fakePort(mode = "accepted") {
+function fakeFabric(mode = "accepted", { delayMs = 0 } = {}) {
   const calls = [];
+  const principals = [];
   return {
     calls,
-    async dispatch(target, invocation) {
-      calls.push({ target, invocation });
-      if (mode === "failed") return { status: "failed", diagnostics: [{ code: "fake.failure", message: "declined", severity: "error" }] };
-      if (mode === "unknown") return { status: "outcome_unknown", diagnostics: [{ code: "fake.unknown", message: "interrupted", severity: "error" }] };
-      return {
-        status: "succeeded",
-        output: target === "pi_dev.scout" ? scout() : architect({ complete: mode !== "rejected" }),
-        receipt: { schemaVersion: 1, invocationId: `fake-${calls.length}`, revision: 1, state: "succeeded", traceId: `trace-${calls.length}`, spanId: `span-${calls.length}`, target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" },
-      };
+    principals,
+    mintPrincipal(id, kind) {
+      principals.push({ id, kind });
+      return { id, kind };
+    },
+    async invokeAs(principal, target, input, options) {
+      calls.push({ principal, target, input, options });
+      if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+      const index = calls.length;
+      const receiptState = mode === "protocol-rejected" ? "rejected" : mode === "cancelled" ? "cancelled" : mode === "unknown" ? "outcome_unknown" : mode === "failed" ? "failed" : "succeeded";
+      const receipt = { schemaVersion: 1, invocationId: `fake-${index}`, revision: 1, state: receiptState, traceId: `trace-${index}`, spanId: `span-${index}`, target, requestedAt: 1, effectsMayHaveOccurred: receiptState !== "rejected", childInvocationIds: [], externalAudit: "not_configured" };
+      if (mode === "throw") throw new Error("transport interrupted");
+      if (mode === "malformed") return null;
+      if (mode === "unknown") return { ok: false, error: { code: "OUTCOME_UNKNOWN", message: "interrupted" }, result: { ok: false }, receipt };
+      if (["protocol-rejected", "failed", "cancelled"].includes(mode)) return { ok: false, error: { code: mode === "cancelled" ? "CANCELLED" : mode === "protocol-rejected" ? "FORBIDDEN" : "EXECUTION_FAILED", message: "declined" }, result: { ok: false }, receipt };
+      return { ok: true, output: mode === "bad-output" ? {} : target === "pi_dev.scout" ? scout() : architect({ complete: mode !== "rejected" }), result: { ok: true }, receipt };
     },
   };
 }
 
-async function runtimeFixture(mode = "accepted") {
+async function runtimeFixture(mode = "accepted", options = {}) {
   const repositoryRoot = await repositoryFixture();
   const runtimeRoot = join(repositoryRoot, ".pi", "factory", "runtime");
-  const port = fakePort(mode);
+  const fabric = fakeFabric(mode, options);
+  const port = createPiProtocolCapabilityPort(fabric);
   const runtime = createPlanChangeRuntime({ runtimeRoot, repositoryRoot, catalog, capabilityPort: port });
-  return { repositoryRoot, runtimeRoot, runtime, port };
+  return { repositoryRoot, runtimeRoot, runtime, port, fabric };
 }
 
 async function clean(root) {
   await rm(root, { recursive: true, force: true });
 }
 
+test("Protocol adapter forwards the exact attenuated public invocation", async () => {
+  let seen;
+  const signal = new AbortController().signal;
+  const deadline = Date.now() + 1000;
+  const fabric = {
+    mintPrincipal: (id, kind) => ({ id, kind }),
+    invokeAs: async (principal, target, input, options) => {
+      seen = { principal, target, input, options };
+      return { ok: true, output: scout(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: "adapter-1", revision: 1, state: "succeeded", traceId: "trace", spanId: "span", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
+    },
+  };
+  const port = createPiProtocolCapabilityPort(fabric);
+  const result = await port.dispatch("pi_dev.scout", { runId: "run", phaseId: "scout", target: "pi_dev.scout", input: { task: "task" }, inputDigest: "digest", workflowDigest: "workflow", prompt: { id: "prompt", kind: "prompt", path: "prompt.md" }, repositoryIdentityDigest: "repo", environmentIdentityDigest: "env", signal, deadline });
+  assert.equal(result.status, "succeeded");
+  assert.deepEqual(seen.principal, { id: "workflow:software-factory", kind: "agent" });
+  assert.equal(seen.target, "pi_dev.scout");
+  assert.deepEqual(seen.input, { task: "task" });
+  assert.deepEqual(seen.options.grant, { targets: ["pi_dev.scout"], effects: ["fs.read", "model.call"], maxDepth: 0, maxInvocations: 1 });
+  assert.equal(seen.options.signal, signal);
+  assert.equal(seen.options.deadline, deadline);
+});
+
 test("accepted execution is sequential, receipt-backed, bounded, and mutation-free", async () => {
   const fixture = await runtimeFixture();
   try {
-    const result = await fixture.runtime.start({ requestId: "req-accepted", task: "plan safely" }, "run-accepted");
+    const result = await fixture.runtime.start({ requestId: "req-accepted", task: "plan safely", constraints: ["bounded"] }, "run-accepted");
     assert.equal(result.status, "accepted");
-    assert.deepEqual(fixture.port.calls.map((call) => call.target), ["pi_dev.scout", "pi_dev.architect"]);
-    assert.equal(fixture.port.calls[0].invocation.input.task, "plan safely");
+    assert.deepEqual(fixture.fabric.calls.map((call) => call.target), ["pi_dev.scout", "pi_dev.architect"]);
+    assert.equal(fixture.fabric.calls[0].input.task, "plan safely");
+    assert.deepEqual(fixture.fabric.principals, [{ id: "workflow:software-factory", kind: "agent" }]);
+    assert.deepEqual(fixture.fabric.calls[0].options.grant, { targets: ["pi_dev.scout"], effects: ["fs.read", "model.call"], maxDepth: 0, maxInvocations: 1 });
+    assert.deepEqual(fixture.fabric.calls[1].options.grant, { targets: ["pi_dev.architect"], effects: ["fs.read", "model.call"], maxDepth: 0, maxInvocations: 1 });
+    assert.deepEqual(fixture.fabric.calls[0].input, { task: "plan safely" });
+    assert.equal(fixture.fabric.calls[0].input.constraints, undefined);
+    assert.deepEqual(fixture.fabric.calls[1].input.constraints, ["bounded"]);
+    assert.equal(fixture.fabric.calls[0].options.signal instanceof AbortSignal, true);
+    assert.ok(fixture.fabric.calls[0].options.deadline > Date.now());
     const inspection = await fixture.runtime.inspect("run-accepted");
     assert.equal(inspection.valid, true);
     assert.equal(inspection.uncertainInvocation, false);
@@ -98,13 +137,15 @@ test("rejected acceptance remains distinct from execution failure", async () => 
 });
 
 test("capability failure and unknown outcomes are truthful and never replayed", async () => {
-  for (const mode of ["failed", "unknown"]) {
+  for (const mode of ["protocol-rejected", "failed", "cancelled", "unknown"]) {
     const fixture = await runtimeFixture(mode);
     try {
       const result = await fixture.runtime.start({ requestId: `req-${mode}`, task: "plan" }, `run-${mode}`);
       assert.equal(result.status, mode === "unknown" ? "outcome_unknown" : "failed");
-      assert.equal(fixture.port.calls.length, 1);
+      assert.equal(fixture.fabric.calls.length, 1);
       const inspection = await fixture.runtime.inspect(`run-${mode}`);
+      const dispatchEvent = inspection.events.find((event) => event.type === "capability.dispatch_result");
+      assert.equal(dispatchEvent.data.receipt.state, mode === "unknown" ? "outcome_unknown" : mode === "protocol-rejected" ? "rejected" : mode === "cancelled" ? "cancelled" : "failed");
       assert.equal(inspection.uncertainInvocation, mode === "unknown");
       if (mode === "unknown") {
         await assert.rejects(() => fixture.runtime.resume(`run-${mode}`), /uncertain capability invocation/);
@@ -117,7 +158,7 @@ test("capability failure and unknown outcomes are truthful and never replayed", 
 
 test("interrupted invocation leaves intent without a replayable resume", async () => {
   const fixture = await runtimeFixture();
-  fixture.port.dispatch = async () => { throw new Error("transport interrupted"); };
+  fixture.fabric.invokeAs = async () => { throw new Error("transport interrupted"); };
   try {
     const result = await fixture.runtime.start({ requestId: "req-interrupted", task: "plan" }, "run-interrupted");
     assert.equal(result.status, "outcome_unknown");
@@ -139,33 +180,84 @@ test("duplicate claims are exclusive and nonterminal resume is read-only", async
     const before = await readFile(journalPath, "utf8");
     await assert.rejects(() => fixture.runtime.resume("run-duplicate"), /uncertain capability invocation/);
     assert.equal(await readFile(journalPath, "utf8"), before);
-    assert.equal(fixture.port.calls.length, 1);
+    assert.equal(fixture.fabric.calls.length, 1);
   } finally { await clean(fixture.repositoryRoot); }
 });
 
-test("dispatch timeout becomes unknown and ignores a late settlement", async () => {
+test("dispatch timeout stays unknown and may retain a prompt unknown receipt", async () => {
   const fixture = await runtimeFixture();
-  fixture.runtime = createPlanChangeRuntime({ runtimeRoot: fixture.runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: { calls: fixture.port.calls, async dispatch(target, invocation) { fixture.port.calls.push({ target, invocation }); await new Promise((resolve) => setTimeout(resolve, 40)); return { status: "outcome_unknown", diagnostics: [] }; } }, dispatchTimeoutMs: 5, dispatchGraceMs: 1 });
+  fixture.fabric.invokeAs = async (principal, target, input, options) => { fixture.fabric.calls.push({ principal, target, input, options }); await new Promise((resolve) => setTimeout(resolve, 40)); return { ok: false, error: { code: "OUTCOME_UNKNOWN", message: "interrupted" }, result: { ok: false }, receipt: { schemaVersion: 1, invocationId: `timeout-${fixture.fabric.calls.length}`, revision: 1, state: "outcome_unknown", traceId: "trace-timeout", spanId: "span-timeout", target, requestedAt: 1, effectsMayHaveOccurred: true, childInvocationIds: [], externalAudit: "not_configured" } }; };
+  fixture.runtime = createPlanChangeRuntime({ runtimeRoot: fixture.runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: fixture.port, dispatchTimeoutMs: 5, dispatchGraceMs: 200 });
   try {
     const result = await fixture.runtime.start({ requestId: "req-timeout", task: "plan" }, "run-timeout");
     assert.equal(result.status, "outcome_unknown");
     await new Promise((resolve) => setTimeout(resolve, 60));
-    assert.equal((await fixture.runtime.inspect("run-timeout")).uncertainInvocation, true);
-    assert.equal(fixture.port.calls.length, 1);
+    const inspection = await fixture.runtime.inspect("run-timeout");
+    assert.equal(inspection.uncertainInvocation, true);
+    assert.equal(inspection.events.find((event) => event.type === "capability.dispatch_result").data.receipt.state, "outcome_unknown");
+    assert.equal(fixture.fabric.calls.length, 1);
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("synchronous event-loop blocking settlement after the deadline stays unknown", async () => {
+  const fixture = await runtimeFixture();
+  fixture.fabric.invokeAs = (principal, target, input, options) => {
+    fixture.fabric.calls.push({ principal, target, input, options });
+    const blockedUntil = Date.now() + 30;
+    while (Date.now() < blockedUntil) {}
+    return { ok: true, output: scout(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: "sync-late-success", revision: 1, state: "succeeded", traceId: "trace-sync-late", spanId: "span-sync-late", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
+  };
+  fixture.runtime = createPlanChangeRuntime({ runtimeRoot: fixture.runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: fixture.port, dispatchTimeoutMs: 1, dispatchGraceMs: 1 });
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-sync-late", task: "plan" }, "run-sync-late");
+    assert.equal(result.status, "outcome_unknown");
+    const inspection = await fixture.runtime.inspect("run-sync-late");
+    const dispatchResult = inspection.events.find((event) => event.type === "capability.dispatch_result");
+    assert.equal(dispatchResult.data.status, "outcome_unknown");
+    assert.equal(dispatchResult.data.receipt, undefined);
+    assert.equal(inspection.uncertainInvocation, true);
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("late terminal settlement after the deadline cannot become success", async () => {
+  const fixture = await runtimeFixture();
+  fixture.fabric.invokeAs = async (principal, target, input, options) => {
+    fixture.fabric.calls.push({ principal, target, input, options });
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return { ok: true, output: scout(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: "late-success", revision: 1, state: "succeeded", traceId: "trace-late", spanId: "span-late", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
+  };
+  fixture.runtime = createPlanChangeRuntime({ runtimeRoot: fixture.runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: fixture.port, dispatchTimeoutMs: 5, dispatchGraceMs: 1 });
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-late", task: "plan" }, "run-late");
+    assert.equal(result.status, "outcome_unknown");
+    const inspection = await fixture.runtime.inspect("run-late");
+    assert.equal(inspection.events.find((event) => event.type === "capability.dispatch_result").data.receipt, undefined);
+    assert.notEqual(inspection.run.status, "succeeded");
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("runtime-owned output rejection retains the canonical invocation receipt", async () => {
+  const fixture = await runtimeFixture("bad-output");
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-output", task: "plan" }, "run-output");
+    assert.equal(result.status, "failed");
+    const inspection = await fixture.runtime.inspect("run-output");
+    assert.equal(inspection.valid, true);
+    assert.equal(inspection.events.find((event) => event.type === "capability.dispatch_result").data.receipt.state, "succeeded");
   } finally { await clean(fixture.repositoryRoot); }
 });
 
 test("mutation after scout prevents architect dispatch", async () => {
   const fixture = await runtimeFixture();
-  fixture.port.dispatch = async (target, invocation) => {
-    fixture.port.calls.push({ target, invocation });
+  fixture.fabric.invokeAs = async (principal, target, input, options) => {
+    fixture.fabric.calls.push({ principal, target, input, options });
     if (target === "pi_dev.scout") await writeFile(join(fixture.repositoryRoot, "ignored-output.txt"), "mutation");
-    return { status: "succeeded", output: target === "pi_dev.scout" ? scout() : architect(), receipt: { schemaVersion: 1, invocationId: `mutation-${fixture.port.calls.length}`, revision: 1, state: "succeeded", traceId: "trace", spanId: "span", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
+    return { ok: true, output: target === "pi_dev.scout" ? scout() : architect(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: `mutation-${fixture.fabric.calls.length}`, revision: 1, state: "succeeded", traceId: "trace", spanId: "span", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
   };
   try {
     const result = await fixture.runtime.start({ requestId: "req-mutation", task: "plan" }, "run-mutation");
     assert.equal(result.status, "failed");
-    assert.deepEqual(fixture.port.calls.map((call) => call.target), ["pi_dev.scout"]);
+    assert.deepEqual(fixture.fabric.calls.map((call) => call.target), ["pi_dev.scout"]);
   } finally { await clean(fixture.repositoryRoot); }
 });
 
@@ -186,7 +278,7 @@ test("runtime topology rejects equal, ancestor, and outside roots", async () => 
   const fixture = await runtimeFixture(); const outside = await mkdtemp(join(tmpdir(), "factory-outside-"));
   try {
     for (const runtimeRoot of [fixture.repositoryRoot, join(fixture.repositoryRoot, ".."), join(outside, "runtime")]) {
-      const runtime = createPlanChangeRuntime({ runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: fakePort() });
+      const runtime = createPlanChangeRuntime({ runtimeRoot, repositoryRoot: fixture.repositoryRoot, catalog, capabilityPort: createPiProtocolCapabilityPort(fakeFabric()) });
       await assert.rejects(() => runtime.start({ requestId: "topology", task: "task" }, "topology"), /runtimeRoot|topology/);
     }
   } finally { await clean(fixture.repositoryRoot); await clean(outside); }
@@ -200,7 +292,7 @@ test("hostile fulfilled capability values settle durable unknown without leakage
     () => ({ status: "failed", diagnostics: [null] }),
   ];
   for (const [index, makeValue] of cases.entries()) {
-    const fixture = await runtimeFixture(); fixture.port.dispatch = async () => makeValue();
+    const fixture = await runtimeFixture(); fixture.fabric.invokeAs = async () => makeValue();
     try {
       const result = await fixture.runtime.start({ requestId: `malformed-${index}`, task: "secret task" }, `malformed-${index}`);
       assert.equal(result.status, "outcome_unknown");

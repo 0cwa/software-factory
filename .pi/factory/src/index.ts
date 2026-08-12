@@ -6,3 +6,4 @@ export * from "./workflow.js";
 export * from "./catalog.js";
 export * from "./handoff.js";
 export * from "./runtime.js";
+export * from "./protocol.js";
