@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-authority-policy",
+  "protected": true,
+  "authorityOrder": [
+    "owner-direction",
+    "accepted-adrs-and-coordinating-epics",
+    "versioned-schemas-and-contracts",
+    "exact-github-issue",
+    "repository-protected-policy",
+    "personal-defaults",
+    "generated-active-context"
+  ],
+  "owners": {
+    "environment": "pi-foundry",
+    "softwareWorkflow": "software-factory",
+    "capabilityInvocation": "pi-protocol",
+    "roleImplementation": "provider-repository",
+    "fixedPipelines": "pi-pe",
+    "workBacklog": "github-issues",
+    "factoryOperationalEvidence": "software-factory",
+    "comparativeEvaluationAndPromotion": "pi-foundry",
+    "repositoryIntegration": "repository-pr-policy"
+  },
+  "exclusiveAuthorities": {
+    "development.workflow": {
+      "default": "software-factory",
+      "allow": ["software-factory", "taskplane", "manual"],
+      "maxEffectiveProviders": 1
+    }
+  },
+  "rules": [
+    "Lower-precedence configuration cannot weaken higher-precedence policy.",
+    "Subordinate providers cannot create competing work-unit or acceptance authority.",
+    "GitHub issue scope cannot be rewritten by a local active plan.",
+    "Factory cannot install or promote environment components directly.",
+    "Foundry cannot execute or clean Factory operational workflows directly.",
+    "Protocol receipts remain canonical for capability invocation outcomes.",
+    "Dependency fixes are made in the authoritative repository, not copied reference trees."
+  ],
+  "unknownAuthorityBehavior": "block-and-request-exact-decision"
+}
