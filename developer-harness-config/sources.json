@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "repositories": {
+    "pi-foundry": {
+      "repository": "0cwa/pi-foundry",
+      "purpose": "Pi environment desired-state, exact resolution, installation, evaluation, promotion, update, repair and rollback.",
+      "coordinatingIssue": "https://github.com/0cwa/pi-foundry/issues/1",
+      "defaultBranch": "master",
+      "mutationAuthority": [
+        "environment",
+        "package-settings-host-tools",
+        "workflow-provider-selection",
+        "harness-promotion"
+      ]
+    },
+    "software-factory": {
+      "repository": "0cwa/software-factory",
+      "purpose": "Inspectable software-development workflows, work units, gates, isolated workspaces, acceptance, operational evidence and draft-PR integration.",
+      "coordinatingIssue": "https://github.com/0cwa/software-factory/issues/1",
+      "defaultBranch": "main",
+      "mutationAuthority": [
+        "software-workflows",
+        "factory-runtime",
+        "candidate-workspaces",
+        "operational-evidence"
+      ],
+      "referenceCommit": "3195d5ebd58729933693a8261674c6a68c655531"
+    },
+    "pi-protocol": {
+      "repository": "Kybernetria/pi-protocol",
+      "purpose": "Capability contracts, discovery, principals, grants, invocation, sessions, receipts and causal provenance.",
+      "defaultBranch": "main",
+      "mutationAuthority": [
+        "capability-contracts",
+        "invocation-authority",
+        "canonical-receipts"
+      ]
+    },
+    "pi-dev": {
+      "repository": "Kybernetria/pi-dev",
+      "purpose": "Profile-backed software-development role providers such as scout, architect, worker and reviewers.",
+      "defaultBranch": "main",
+      "mutationAuthority": [
+        "development-role-contracts",
+        "provider-private-profiles"
+      ]
+    },
+    "pi-pe": {
+      "repository": "Kybernetria/pi-pe",
+      "purpose": "Optional deterministic data-only fixed capability pipelines.",
+      "defaultBranch": "main",
+      "mutationAuthority": [
+        "pipeline-definitions",
+        "pipeline-runtime"
+      ]
+    }
+  },
+  "sourceModes": [
+    "registry-exact",
+    "release-artifact",
+    "exact-git",
+    "workspace-sibling",
+    "retained-artifact",
+    "materialized-fallback"
+  ],
+  "localSiblingLayout": {
+    "rootSymbol": "WORKSPACE_ROOT",
+    "examples": {
+      "pi-foundry": "pi-foundry",
+      "software-factory": "software-factory",
+      "pi-protocol": "pi-protocol",
+      "pi-dev": "pi-dev",
+      "pi-pe": "pi-pe"
+    },
+    "portableStateContainsAbsolutePaths": false
+  },
+  "rules": [
+    "Never implement a source fix in a copied reference directory.",
+    "Use public package or Pi Protocol contracts across repository boundaries.",
+    "Create and link one issue in the authoritative repository when a dependency change is required.",
+    "Mutable refs resolve to exact commits or artifacts before proposal, execution, or evaluation.",
+    "Dirty local source requires explicit policy and remains observed-unverified until tested."
+  ]
+}
