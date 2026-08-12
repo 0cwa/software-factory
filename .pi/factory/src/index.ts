@@ -7,3 +7,6 @@ export * from "./catalog.js";
 export * from "./handoff.js";
 export * from "./runtime.js";
 export * from "./protocol.js";
+export * from "./production.js";
+export * from "./application.js";
+export * from "./environment.js";

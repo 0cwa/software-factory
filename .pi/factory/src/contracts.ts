@@ -19,7 +19,7 @@ export interface WorkflowDefinition {
   readonly phases: readonly PhaseDefinition[]; readonly transitions: readonly TransitionDefinition[]; readonly guards: readonly GuardDefinition[];
 }
 export interface WorkUnit { readonly id: string; readonly requestId: string; readonly task: string; readonly status: "pending" | "running" | "completed" | "rejected"; }
-export interface RepositoryIdentity { readonly head: string; readonly statusDigest: string; readonly filesDigest: string; }
+export interface RepositoryIdentity { readonly head: string; readonly filesDigest: string; }
 export interface EnvironmentIdentity { readonly nodeMajor: number; readonly platform: string; readonly arch: string; readonly ci: boolean; readonly digest: string; }
 export interface FactoryRun {
   readonly id: string; readonly workUnitId: string; readonly workflowId: string;

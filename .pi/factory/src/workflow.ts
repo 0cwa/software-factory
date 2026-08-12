@@ -34,6 +34,45 @@ export interface NormalizedWorkflow {
   readonly digest: string;
 }
 
+const PLAN_CHANGE_PHASES = [
+  ["request", "request", undefined, undefined, undefined],
+  ["scout", "capability", "pi_dev.scout", undefined, undefined],
+  ["handoff", "adapter", undefined, "scout_to_architect_request", undefined],
+  ["architect", "capability", "pi_dev.architect", undefined, undefined],
+  ["gates", "gate", undefined, undefined, undefined],
+  ["accepted", "terminal", undefined, undefined, "accepted"],
+  ["rejected", "terminal", undefined, undefined, "rejected"],
+] as const;
+const PLAN_CHANGE_TRANSITIONS = [
+  ["request-to-scout", "request", "scout", "always"],
+  ["scout-to-handoff", "scout", "handoff", "execution-succeeded"],
+  ["handoff-to-architect", "handoff", "architect", "execution-succeeded"],
+  ["architect-to-gates", "architect", "gates", "execution-succeeded"],
+  ["gates-to-accepted", "gates", "accepted", "acceptance-passed"],
+  ["gates-to-rejected", "gates", "rejected", "acceptance-failed"],
+] as const;
+const PLAN_CHANGE_GUARDS = [
+  ["always", "always"], ["execution-succeeded", "execution_succeeded"],
+  ["acceptance-passed", "acceptance_passed"], ["acceptance-failed", "acceptance_failed"],
+] as const;
+
+export function assertPlanChangeTopology(workflow: WorkflowDefinition): void {
+  if (workflow.id !== "plan-change" || workflow.version !== 1 || workflow.entryPhaseId !== "request") throw new Error("Plan-change executor topology admission failed");
+  if (workflow.phases.length !== PLAN_CHANGE_PHASES.length || workflow.transitions.length !== PLAN_CHANGE_TRANSITIONS.length || workflow.guards.length !== PLAN_CHANGE_GUARDS.length) throw new Error("Plan-change executor topology admission failed");
+  const phaseMap = new Map(workflow.phases.map((phase) => [phase.id, phase]));
+  for (const [id, kind, target, adapter, terminalOutcome] of PLAN_CHANGE_PHASES) {
+    const phase = phaseMap.get(id);
+    if (!phase || phase.kind !== kind || (phase.target ?? undefined) !== target || (phase.adapter ?? undefined) !== adapter || (phase.terminalOutcome ?? undefined) !== terminalOutcome) throw new Error("Plan-change executor topology admission failed");
+  }
+  const transitionMap = new Map(workflow.transitions.map((transition) => [transition.id, transition]));
+  for (const [id, from, to, guard] of PLAN_CHANGE_TRANSITIONS) {
+    const transition = transitionMap.get(id);
+    if (!transition || transition.from !== from || transition.to !== to || transition.guard !== guard) throw new Error("Plan-change executor topology admission failed");
+  }
+  const guardMap = new Map(workflow.guards.map((guard) => [guard.id, guard]));
+  for (const [id, condition] of PLAN_CHANGE_GUARDS) if (guardMap.get(id)?.condition !== condition) throw new Error("Plan-change executor topology admission failed");
+}
+
 const idPattern = /^[a-z][a-z0-9-]{0,63}$/;
 const targetPattern = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
 const fixedTargets = new Set(["pi_dev.scout", "pi_dev.architect"]);
@@ -309,22 +348,26 @@ export function digestWorkflow(workflow: WorkflowDefinition, assets: WorkflowAss
   return normalizeWorkflow(workflow, assets).digest;
 }
 
+function escapeHumanText(value: unknown): string {
+  return String(value).replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g, (character) => `\\u${character.codePointAt(0)!.toString(16).padStart(4, "0")}`);
+}
+
 function textGuard(condition: string): string {
-  return condition.replaceAll("_", " ");
+  return escapeHumanText(condition.replaceAll("_", " "));
 }
 
 export function renderWorkflowText(normalized: NormalizedWorkflow): string {
-  const lines = [`workflow ${normalized.workflow.id}@${normalized.workflow.version} (${normalized.digest})`, `entry: ${normalized.workflow.entryPhaseId}`, `max traversal steps: ${normalized.workflow.maxTraversalSteps}`, "phases:"];
+  const lines = [`workflow ${escapeHumanText(normalized.workflow.id)}@${escapeHumanText(normalized.workflow.version)} (${normalized.digest})`, `entry: ${escapeHumanText(normalized.workflow.entryPhaseId)}`, `max traversal steps: ${escapeHumanText(normalized.workflow.maxTraversalSteps)}`, "phases:"];
   for (const phase of normalized.workflow.phases) {
-    const target = phase.target === undefined ? "" : ` target=${phase.target}`;
-    const outcome = phase.terminalOutcome === undefined ? "" : ` outcome=${phase.terminalOutcome}`;
-    lines.push(`- ${phase.id} [${phase.kind}] ${phase.label}${target}${outcome}`);
+    const target = phase.target === undefined ? "" : ` target=${escapeHumanText(phase.target)}`;
+    const outcome = phase.terminalOutcome === undefined ? "" : ` outcome=${escapeHumanText(phase.terminalOutcome)}`;
+    lines.push(`- ${escapeHumanText(phase.id)} [${escapeHumanText(phase.kind)}] ${escapeHumanText(phase.label)}${target}${outcome}`);
   }
   lines.push("transitions:");
   const guardConditions = new Map(normalized.workflow.guards.map((guard) => [guard.id, guard.condition]));
-  for (const transition of normalized.workflow.transitions) lines.push(`- ${transition.from} -> ${transition.to} [${textGuard(guardConditions.get(transition.guard) ?? transition.guard)}]`);
+  for (const transition of normalized.workflow.transitions) lines.push(`- ${escapeHumanText(transition.from)} -> ${escapeHumanText(transition.to)} [${textGuard(guardConditions.get(transition.guard) ?? transition.guard)}]`);
   lines.push("prompt assets:");
-  for (const asset of normalized.promptAssets) lines.push(`- ${asset.path} (${Buffer.from(asset.bytesBase64, "base64").byteLength} bytes)`);
+  for (const asset of normalized.promptAssets) lines.push(`- ${escapeHumanText(asset.path)} (${Buffer.from(asset.bytesBase64, "base64").byteLength} bytes)`);
   return `${lines.join("\n")}\n`;
 }
 
@@ -336,12 +379,12 @@ export function renderWorkflowMermaid(normalized: NormalizedWorkflow): string {
   const lines = ["flowchart TD"];
   for (const phase of normalized.workflow.phases) {
     const label = phase.terminalOutcome === undefined ? phase.label : `${phase.label} (${phase.terminalOutcome})`;
-    lines.push(`  ${mermaidId(phase.id)}[\"${label.replaceAll('"', "'")}\"]`);
+    lines.push(`  ${mermaidId(phase.id)}[\"${escapeHumanText(label).replaceAll('"', "'")}\"]`);
   }
   const conditions = new Map(normalized.workflow.guards.map((guard) => [guard.id, guard.condition]));
   for (const transition of normalized.workflow.transitions) {
     const condition = conditions.get(transition.guard) ?? transition.guard;
-    lines.push(`  ${mermaidId(transition.from)} -->|${condition}| ${mermaidId(transition.to)}`);
+    lines.push(`  ${mermaidId(transition.from)} -->|${escapeHumanText(condition)}| ${mermaidId(transition.to)}`);
   }
   return `${lines.join("\n")}\n`;
 }

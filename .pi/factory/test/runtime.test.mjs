@@ -247,6 +247,25 @@ test("runtime-owned output rejection retains the canonical invocation receipt", 
   } finally { await clean(fixture.repositoryRoot); }
 });
 
+test("local snapshot dependency failure is durably failed and abandonable", async () => {
+  const fixture = await runtimeFixture();
+  const original = fixture.fabric.invokeAs;
+  fixture.fabric.invokeAs = async (...args) => {
+    const result = await original.apply(fixture.fabric, args);
+    if (args[1] === "pi_dev.scout") await exec("mkfifo", [join(fixture.repositoryRoot, "dependency.pipe")]);
+    return result;
+  };
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-local-failure", task: "plan" }, "run-local-failure");
+    assert.equal(result.status, "failed");
+    const inspection = await fixture.runtime.inspect("run-local-failure");
+    assert.equal(inspection.run.status, "failed");
+    assert.ok(inspection.events.some((event) => event.type === "phase.result" && event.data.diagnosticCodes.includes("runtime.local-failure")));
+    const abandoned = await fixture.runtime.abandon("run-local-failure", "operator");
+    assert.equal(abandoned.run.status, "abandoned");
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
 test("mutation after scout prevents architect dispatch", async () => {
   const fixture = await runtimeFixture();
   fixture.fabric.invokeAs = async (principal, target, input, options) => {
@@ -256,6 +275,20 @@ test("mutation after scout prevents architect dispatch", async () => {
   };
   try {
     const result = await fixture.runtime.start({ requestId: "req-mutation", task: "plan" }, "run-mutation");
+    assert.equal(result.status, "failed");
+    assert.deepEqual(fixture.fabric.calls.map((call) => call.target), ["pi_dev.scout"]);
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("Git metadata mutation after scout prevents architect dispatch", async () => {
+  const fixture = await runtimeFixture();
+  fixture.fabric.invokeAs = async (principal, target, input, options) => {
+    fixture.fabric.calls.push({ principal, target, input, options });
+    if (target === "pi_dev.scout") await writeFile(join(fixture.repositoryRoot, ".git", "factory-mutation"), "mutation");
+    return { ok: true, output: target === "pi_dev.scout" ? scout() : architect(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: `git-mutation-${fixture.fabric.calls.length}`, revision: 1, state: "succeeded", traceId: "trace", spanId: "span", target, requestedAt: 1, effectsMayHaveOccurred: false, childInvocationIds: [], externalAudit: "not_configured" } };
+  };
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-git-mutation", task: "plan" }, "run-git-mutation");
     assert.equal(result.status, "failed");
     assert.deepEqual(fixture.fabric.calls.map((call) => call.target), ["pi_dev.scout"]);
   } finally { await clean(fixture.repositoryRoot); }
@@ -272,6 +305,22 @@ test("inspection rejects corruption and runtime records remain bounded", async (
     assert.ok(inspection.diagnostics.some((item) => item.code === "runtime.journal-corrupt"));
     await assert.rejects(() => store.append("x".repeat(65), {}), /event type is invalid/);
   } finally { await clean(root); }
+});
+
+test("schema v1 records omit statusDigest and reject stale records", async () => {
+  const fixture = await runtimeFixture();
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-schema", task: "plan" }, "run-schema");
+    assert.equal(result.status, "accepted");
+    const runPath = join(fixture.runtimeRoot, "run-schema", "run.json");
+    const current = JSON.parse(await readFile(runPath, "utf8"));
+    assert.deepEqual(Object.keys(current.repositoryIdentity).sort(), ["filesDigest", "head"]);
+    current.repositoryIdentity.statusDigest = current.repositoryIdentity.filesDigest;
+    await writeFile(runPath, `${JSON.stringify(current)}\n`);
+    const inspection = await fixture.runtime.inspect("run-schema");
+    assert.equal(inspection.valid, false);
+    assert.ok(inspection.diagnostics.some((item) => item.code === "runtime.run-corrupt"));
+  } finally { await clean(fixture.repositoryRoot); }
 });
 
 test("runtime topology rejects equal, ancestor, and outside roots", async () => {

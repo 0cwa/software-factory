@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
+  assertPlanChangeTopology,
   digestWorkflow,
   formatScoutToArchitectRequest,
   loadPlanChangeCatalog,
@@ -66,6 +67,15 @@ test("normalization and digest are stable and prompt-sensitive", () => {
   assert.notEqual(first.digest, digestWorkflow(catalog.workflow, changedAssets));
 });
 
+test("human workflow renderings escape terminal and bidi controls without changing JSON data", () => {
+  const altered = cloneWorkflow();
+  altered.phases.find((phase) => phase.id === "request").label = "Request\n\u202eInjected";
+  const normalized = normalizeWorkflow(altered, emptyAssets);
+  assert.match(renderWorkflowText(normalized), /Request\\u000a\\u202eInjected/);
+  assert.match(renderWorkflowMermaid(normalized), /Request\\u000a\\u202eInjected/);
+  assert.equal(normalized.workflow.phases.find((phase) => phase.id === "request").label, "Request\n\u202eInjected");
+});
+
 test("text and Mermaid views use the normalized graph", () => {
   const normalized = normalizeWorkflow(catalog.workflow, emptyAssets);
   const text = renderWorkflowText(normalized);
@@ -74,6 +84,21 @@ test("text and Mermaid views use the normalized graph", () => {
   assert.match(text, /scout -> handoff/);
   assert.match(mermaid, /p_request -->\|always\| p_scout/);
   assert.match(mermaid, /p_gates -->\|acceptance_failed\| p_rejected/);
+});
+
+test("executor admission rejects every altered fixed topology", () => {
+  assert.doesNotThrow(() => assertPlanChangeTopology(catalog.workflow));
+  for (const alter of [
+    (workflow) => { workflow.phases.pop(); },
+    (workflow) => { workflow.phases.find((phase) => phase.id === "scout").target = "pi_dev.architect"; },
+    (workflow) => { workflow.phases.find((phase) => phase.id === "handoff").adapter = "other"; },
+    (workflow) => { workflow.transitions.find((transition) => transition.id === "gates-to-accepted").to = "rejected"; },
+    (workflow) => { workflow.guards.find((guard) => guard.id === "always").condition = "execution_succeeded"; },
+  ]) {
+    const altered = cloneWorkflow();
+    alter(altered);
+    assert.throws(() => assertPlanChangeTopology(altered), /topology admission/);
+  }
 });
 
 test("fixed graph uses only Protocol capabilities and exact concrete guard semantics", () => {
@@ -178,7 +203,7 @@ test("catalog reads bounded regular files and rejects symlink escapes", async ()
   await writeFile(outsidePrompt, "outside");
   await rm(join(prompts, "plan-change-scout.md"));
   await symlink(outsidePrompt, join(prompts, "plan-change-scout.md"));
-  await assert.rejects(() => loadPlanChangeCatalog({ root, workflows, prompts }), /escapes tracked directory/);
+  await assert.rejects(() => loadPlanChangeCatalog({ root, workflows, prompts }), /regular file|symlink|changed while opening/);
 
   const externalRoot = await mkdtemp(join(tmpdir(), "factory-external-"));
   const externalPrompts = join(externalRoot, "prompts");
@@ -206,4 +231,29 @@ test("catalog rejects oversized workflow and prompt files before allocation", as
   await writeFile(join(prompts, "plan-change-scout.md"), "x".repeat(CATALOG_LIMITS.maxPromptBytes + 1));
   await assert.rejects(() => loadPlanChangeCatalog({ root, workflows, prompts }), /exceeds/);
   await rm(root, { recursive: true, force: true });
+});
+
+test("catalog rejects an internal final-leaf symlink", async () => {
+  const root = await mkdtemp(join(tmpdir(), "factory-catalog-leaf-"));
+  const workflows = join(root, "workflows");
+  const prompts = join(root, "prompts");
+  try {
+    await Promise.all([mkdir(workflows), mkdir(prompts)]);
+    await writeFile(join(workflows, "plan-change.json"), JSON.stringify(catalog.workflow));
+    for (const [path, bytes] of Object.entries(catalog.assets)) await writeFile(join(prompts, path), bytes);
+    await rm(join(prompts, "plan-change-scout.md"));
+    await symlink("plan-change-architect.md", join(prompts, "plan-change-scout.md"));
+    await assert.rejects(() => loadPlanChangeCatalog({ root, workflows, prompts }), /regular file|symlink|changed while opening/i);
+    await rm(join(prompts, "plan-change-scout.md"));
+    await writeFile(join(prompts, "plan-change-scout.md"), catalog.assets["plan-change-scout.md"]);
+    await assert.rejects(
+      () => loadPlanChangeCatalog({ root, workflows, prompts }, { afterOpen: async (path) => {
+        if (path.endsWith("plan-change-scout.md")) {
+          await rm(path);
+          await writeFile(path, catalog.assets["plan-change-scout.md"]);
+        }
+      } }),
+      /changed while reading/,
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

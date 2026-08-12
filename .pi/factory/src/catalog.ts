@@ -1,4 +1,5 @@
-import { open, realpath } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, open, realpath } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FactoryConfig, FactoryPaths, WorkflowDefinition } from "./contracts.js";
@@ -20,6 +21,8 @@ export interface LoadedWorkflowCatalog {
   readonly assets: WorkflowAssets;
 }
 
+export interface CatalogReadHooks { readonly afterOpen?: (path: string) => void | Promise<void>; }
+
 export function defaultFactoryPaths(root = fileURLToPath(new URL("../", import.meta.url))): FactoryPaths {
   return { root, workflows: join(root, "workflows"), prompts: join(root, "prompts") };
 }
@@ -37,13 +40,21 @@ function trackedPath(directory: string, relativePath: string): string {
   return candidate;
 }
 
-async function readBoundedRegularFile(trustedRoot: string, directory: string, relativePath: string, maximumBytes: number, label: string): Promise<Uint8Array> {
+function fileType(stat: import("node:fs").Stats): number { return stat.mode & fsConstants.S_IFMT; }
+function sameRegularIdentity(left: import("node:fs").Stats, right: import("node:fs").Stats): boolean {
+  return left.isFile() && right.isFile() && fileType(left) === fileType(right) && left.dev === right.dev && left.ino === right.ino;
+}
+
+async function readBoundedRegularFile(trustedRoot: string, directory: string, relativePath: string, maximumBytes: number, label: string, hooks: CatalogReadHooks = {}): Promise<Uint8Array> {
+  if (fsConstants.O_NOFOLLOW === undefined) throw new Error("No-follow file opening is unavailable");
   const trustedRootRealPath = await realpath(resolve(trustedRoot));
   const directoryRealPath = await realpath(resolve(directory));
   const directoryRelativePath = relative(trustedRootRealPath, directoryRealPath);
   const directoryWithinRoot = directoryRelativePath === "" || (directoryRelativePath !== ".." && !directoryRelativePath.startsWith(`..${"/"}`) && !directoryRelativePath.startsWith(`..${String.fromCharCode(92)}`));
   if (!directoryWithinRoot) throw new Error(`${label} directory escapes trusted root: ${directory}`);
   const candidate = trackedPath(directoryRealPath, relativePath);
+  const beforePathStat = await lstat(candidate);
+  if (!beforePathStat.isFile()) throw new Error(`${label} is not a regular file: ${relativePath}`);
   const fileRealPath = await realpath(candidate);
   const relativeFilePath = relative(directoryRealPath, fileRealPath);
   const withinDirectory = relativeFilePath === "" || (relativeFilePath !== ".." && !relativeFilePath.startsWith(`..${"/"}`) && !relativeFilePath.startsWith(`..${String.fromCharCode(92)}`));
@@ -51,19 +62,26 @@ async function readBoundedRegularFile(trustedRoot: string, directory: string, re
   const withinRoot = fileRelativeToRoot === "" || (fileRelativeToRoot !== ".." && !fileRelativeToRoot.startsWith(`..${"/"}`) && !fileRelativeToRoot.startsWith(`..${String.fromCharCode(92)}`));
   if (!withinDirectory || !withinRoot) throw new Error(`${label} escapes tracked directory: ${relativePath}`);
 
-  const handle = await open(fileRealPath, "r");
+  const handle = await open(candidate, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
   try {
-    const stat = await handle.stat();
-    if (!stat.isFile()) throw new Error(`${label} is not a regular file: ${relativePath}`);
-    if (stat.size > maximumBytes) throw new Error(`${label} exceeds ${maximumBytes} bytes: ${relativePath}`);
-    const bytes = new Uint8Array(stat.size);
+    const openedStat = await handle.stat();
+    if (!sameRegularIdentity(beforePathStat, openedStat) || openedStat.size !== beforePathStat.size) throw new Error(`${label} changed while opening: ${relativePath}`);
+    if (openedStat.size > maximumBytes) throw new Error(`${label} exceeds ${maximumBytes} bytes: ${relativePath}`);
+    if (hooks.afterOpen) await hooks.afterOpen(candidate);
+    const bytes = new Uint8Array(maximumBytes + 1);
     let offset = 0;
     while (offset < bytes.byteLength) {
       const { bytesRead } = await handle.read(bytes, offset, bytes.byteLength - offset, offset);
-      if (bytesRead === 0) throw new Error(`${label} changed while reading: ${relativePath}`);
+      if (bytesRead === 0) break;
       offset += bytesRead;
     }
-    return bytes;
+    if (offset > maximumBytes) throw new Error(`${label} exceeds ${maximumBytes} bytes: ${relativePath}`);
+    const afterHandleStat = await handle.stat();
+    const afterPathStat = await lstat(candidate);
+    if (!sameRegularIdentity(openedStat, afterHandleStat) || afterHandleStat.size !== offset || !sameRegularIdentity(openedStat, afterPathStat) || afterPathStat.size !== afterHandleStat.size) {
+      throw new Error(`${label} changed while reading: ${relativePath}`);
+    }
+    return bytes.slice(0, offset);
   } finally {
     await handle.close();
   }
@@ -95,15 +113,15 @@ function promptPathsFromWorkflow(raw: Record<string, unknown>): string[] {
   return [...paths];
 }
 
-export async function loadPlanChangeCatalog(paths = defaultFactoryPaths()): Promise<LoadedWorkflowCatalog> {
-  const workflowBytes = await readBoundedRegularFile(paths.root, paths.workflows, PLAN_CHANGE_WORKFLOW_FILE, CATALOG_LIMITS.maxWorkflowBytes, "Workflow");
+export async function loadPlanChangeCatalog(paths = defaultFactoryPaths(), hooks: CatalogReadHooks = {}): Promise<LoadedWorkflowCatalog> {
+  const workflowBytes = await readBoundedRegularFile(paths.root, paths.workflows, PLAN_CHANGE_WORKFLOW_FILE, CATALOG_LIMITS.maxWorkflowBytes, "Workflow", hooks);
   const raw = JSON.parse(Buffer.from(workflowBytes).toString("utf8")) as unknown;
   assertPinnedPlanChange(raw);
   const promptPaths = promptPathsFromWorkflow(raw);
   const assets: Record<string, Uint8Array> = {};
   let aggregatePromptBytes = 0;
   for (const assetPath of promptPaths) {
-    const bytes = await readBoundedRegularFile(paths.root, paths.prompts, assetPath, CATALOG_LIMITS.maxPromptBytes, "Prompt asset");
+    const bytes = await readBoundedRegularFile(paths.root, paths.prompts, assetPath, CATALOG_LIMITS.maxPromptBytes, "Prompt asset", hooks);
     aggregatePromptBytes += bytes.byteLength;
     if (aggregatePromptBytes > CATALOG_LIMITS.maxPromptAggregateBytes) throw new Error(`Prompt assets exceed ${CATALOG_LIMITS.maxPromptAggregateBytes} aggregate bytes`);
     assets[assetPath] = bytes;

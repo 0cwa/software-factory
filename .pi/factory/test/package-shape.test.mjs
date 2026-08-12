@@ -11,7 +11,7 @@ test("exports the deployable package entry", async () => {
   assert.equal(factory.FACTORY_PACKAGE_VERSION, packageJson.version);
 });
 
-test("declares a harmless CLI placeholder", () => {
-  assert.deepEqual(packageJson.bin, { "software-factory": "./dist/cli.js" });
+test("declares the production CLI entry points", () => {
+  assert.deepEqual(packageJson.bin, { factory: "./dist/cli.js", "software-factory": "./dist/cli.js" });
   assert.deepEqual(packageJson.files, ["dist", "README.md", "workflows", "prompts"]);
 });

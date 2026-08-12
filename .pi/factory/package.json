@@ -14,6 +14,7 @@
     }
   },
   "bin": {
+    "factory": "./dist/cli.js",
     "software-factory": "./dist/cli.js"
   },
   "files": [

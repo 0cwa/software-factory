@@ -1,5 +1,9 @@
 # Super Simple Software Factory
 
+## SF-1 plan-change correction
+
+The committed SF-1 factory package provides a bounded `plan-change` CLI with exact topology admission, safe request-file handling, clean Git discovery, durable inspect/abandon recovery, and deterministic snapshot limits. The standalone provider remains intentionally blocked by upstream Pi Protocol issue [#5](https://github.com/Kyvernetria/pi-protocol/issues/5); SF-2 is not started. See `.pi/factory/README.md` and [ADR-0002](docs/adr/0002-sf1-cli-application-boundary.md) for the final correction details and residual `openat2` decision trigger.
+
 > **Repeatable agents-plus-code workflows, packaged as one skill, stamped into any repo.**
 > Deterministic Python owns the graph. Coding agents are bounded nodes inside it.
 

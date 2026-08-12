@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { constants as fsConstants } from "node:fs";
-import { link, mkdir, open, readdir, lstat, readlink, realpath, rename, rm, unlink } from "node:fs/promises";
+import { link, mkdir, open, opendir, lstat, readlink, realpath, rename, rm, unlink } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 import { hostname as osHostname } from "node:os";
@@ -12,12 +12,14 @@ import type {
 } from "./contracts.js";
 import { formatScoutToArchitectRequest } from "./handoff.js";
 import type { LoadedWorkflowCatalog } from "./catalog.js";
-import { digestWorkflow } from "./workflow.js";
+import { assertPlanChangeTopology, digestWorkflow } from "./workflow.js";
+import { safeGitEnvironment } from "./environment.js";
 
 export const RUNTIME_LIMITS = {
   maxJournalRecords: 256, maxJournalRecordBytes: 64 * 1024, maxRunBytes: 512 * 1024, maxArtifactBytes: 256 * 1024,
   maxArtifacts: 8, maxSnapshotFiles: 16_384, maxSnapshotBytes: 128 * 1024 * 1024, maxGitOutputBytes: 4 * 1024 * 1024,
   maxStringChars: 65_536, maxReceiptChildren: 64, maxDispatchTimeoutMs: 120_000, maxDispatchGraceMs: 5_000,
+  maxManifestBytes: 16 * 1024 * 1024, maxSymlinkBytes: 16 * 1024,
 } as const;
 
 type EventType = "run.created" | "phase.entered" | "capability.dispatch_intent" | "capability.dispatch_result" | "phase.result" | "acceptance.result" | "operator.abandon";
@@ -269,7 +271,7 @@ function validateRun(value: unknown, runId: string): void {
   if (value.repositoryIdentity !== undefined) validateRepositoryIdentity(value.repositoryIdentity); if (value.environmentIdentity !== undefined) validateEnvironmentIdentity(value.environmentIdentity);
   if (value.phaseEnvelopes !== undefined) { if (!isRecord(value.phaseEnvelopes)) throw new Error("phaseEnvelopes is invalid"); if (Object.keys(value.phaseEnvelopes).length > 8) throw new Error("too many phase envelopes"); for (const item of Object.values(value.phaseEnvelopes)) validateEnvelope(item); }
 }
-function validateRepositoryIdentity(value: unknown): void { if (!isRecord(value)) throw new Error("repository identity is invalid"); exactKeys(value, ["head", "statusDigest", "filesDigest"], "repository identity"); for (const key of ["head", "statusDigest", "filesDigest"]) if (typeof value[key] !== "string" || value[key].length > 256) throw new Error("repository identity is invalid"); }
+function validateRepositoryIdentity(value: unknown): void { if (!isRecord(value)) throw new Error("repository identity is invalid"); exactKeys(value, ["head", "filesDigest"], "repository identity"); for (const key of ["head", "filesDigest"]) if (typeof value[key] !== "string" || value[key].length > 256) throw new Error("repository identity is invalid"); }
 function validateEnvironmentIdentity(value: unknown): void { if (!isRecord(value)) throw new Error("environment identity is invalid"); exactKeys(value, ["nodeMajor", "platform", "arch", "ci", "digest"], "environment identity"); if (typeof value.nodeMajor !== "number" || typeof value.platform !== "string" || typeof value.arch !== "string" || typeof value.ci !== "boolean" || typeof value.digest !== "string") throw new Error("environment identity is invalid"); }
 function validateEnvelope(value: unknown): void { if (!isRecord(value)) throw new Error("phase envelope is invalid"); exactKeys(value, ENVELOPE_KEYS, "phase envelope"); if (typeof value.phaseId !== "string" || typeof value.attemptId !== "string" || !["succeeded", "rejected", "failed"].includes(value.status as string) || !Array.isArray(value.diagnostics) || value.diagnostics.length > 64 || Object.keys(value).includes("output")) throw new Error("phase envelope is invalid"); if (value.receipt !== undefined) { const candidate = value.receipt; const target = isRecord(candidate) && typeof candidate.target === "string" ? candidate.target : ""; const receipt = validateReceipt(candidate, target, value.status === "succeeded" ? "succeeded" : "failed"); if (!receipt || !isRecord(candidate) || candidate.projectionDigest !== receipt.projectionDigest) throw new Error("phase receipt is invalid"); } if (value.artifacts !== undefined) { if (!Array.isArray(value.artifacts) || value.artifacts.length !== 1) throw new Error("phase artifacts are invalid"); const artifact = value.artifacts[0]; if (!isRecord(artifact)) throw new Error("phase artifact is invalid"); exactKeys(artifact, ["id", "kind", "path", "digest", "bytes"], "phase artifact"); if (artifact.kind !== "report" || artifact.path !== "artifacts/plan.json" || typeof artifact.id !== "string" || typeof artifact.digest !== "string" || !/^[a-f0-9]{64}$/.test(artifact.digest) || typeof artifact.bytes !== "number" || !Number.isInteger(artifact.bytes) || artifact.bytes < 1 || artifact.bytes > RUNTIME_LIMITS.maxArtifactBytes || artifact.id !== `plan-${artifact.digest.slice(0, 16)}`) throw new Error("phase artifact is invalid"); } }
 function parseEvent(line: string, sequence: number): JournalEvent { const value: unknown = JSON.parse(line); if (!isRecord(value)) throw new Error(`journal record ${sequence} is invalid`); exactKeys(value, ["seq", "type", "data"], `journal record ${sequence}`); if (value.seq !== sequence || typeof value.type !== "string" || !Object.hasOwn(EVENT_KEYS, value.type) || !isRecord(value.data)) throw new Error(`journal record ${sequence} is invalid`); const type = value.type as EventType; exactKeys(value.data, EVENT_KEYS[type], `event ${type}`); if (value.data.receipt !== undefined) { const receipt = validateReceipt(value.data.receipt, typeof value.data.target === "string" ? value.data.target : "", type === "capability.dispatch_result" && (value.data.status === "succeeded" || value.data.status === "failed" || value.data.status === "outcome_unknown") ? value.data.status : undefined); if (!receipt || !isRecord(value.data.receipt) || value.data.receipt.projectionDigest !== receipt.projectionDigest) throw new Error(`journal event ${type} receipt is invalid`); } if (type === "capability.dispatch_result" && value.data.status === "succeeded" && !("receipt" in value.data)) throw new Error(`journal event ${type} is missing receipt`); const required: Record<EventType, readonly string[]> = { "run.created": ["workflowId", "workflowDigest", "repository", "environment", "requestId", "taskDigest"], "phase.entered": ["phaseId"], "capability.dispatch_intent": EVENT_KEYS["capability.dispatch_intent"], "capability.dispatch_result": ["phaseId", "target", "attemptId", "status", "diagnosticCodes"], "phase.result": EVENT_KEYS["phase.result"], "acceptance.result": EVENT_KEYS["acceptance.result"], "operator.abandon": EVENT_KEYS["operator.abandon"] }; for (const key of required[type]) if (!(key in value.data)) throw new Error(`journal event ${type} is missing ${key}`); const diagnosticCodes = value.data.diagnosticCodes; if (diagnosticCodes !== undefined && (!Array.isArray(diagnosticCodes) || diagnosticCodes.some((code) => typeof code !== "string"))) throw new Error(`journal event ${type} diagnostics are invalid`); return value as JournalEvent; }
@@ -284,7 +286,7 @@ function reconcileEvents(events: readonly JournalEvent[], run: FactoryRun | unde
   const enterable: Record<string, string[]> = { request: ["scout"], scout: ["handoff"], handoff: ["architect"], architect: ["gates"], gates: ["accepted", "rejected"] };
   const divergent = (message: string): void => { diagnostics.push(diagnostic("runtime.state-divergent", message)); };
   for (const event of events.slice(1)) {
-    if (event.type === "operator.abandon") { if (terminal) divergent("Abandon follows a terminal event"); status = "abandoned"; uncertain = true; execution = "outcome_unknown"; terminal = true; continue; }
+    if (event.type === "operator.abandon") { if (terminal) divergent("Abandon follows a terminal event"); status = "abandoned"; uncertain = uncertain || run.uncertainInvocation === true || execution === "outcome_unknown"; if (uncertain) execution = "outcome_unknown"; terminal = true; continue; }
     if (terminal) { divergent("Journal contains events after terminal state"); continue; }
     if (event.type === "phase.entered") {
       const next = event.data.phaseId; if (typeof next !== "string" || !(enterable[phase] ?? []).includes(next)) { divergent("Phase entry is out of order"); continue; }
@@ -326,37 +328,85 @@ function reconcileEvents(events: readonly JournalEvent[], run: FactoryRun | unde
   return projected;
 }
 const execFileAsync = promisify(execFile);
-async function gitHead(repositoryRoot: string): Promise<string> { const result = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, timeout: 5_000, maxBuffer: RUNTIME_LIMITS.maxGitOutputBytes, encoding: "utf8" }); return result.stdout.trim(); }
+async function gitHead(repositoryRoot: string): Promise<string> { const result = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, env: safeGitEnvironment(), timeout: 5_000, maxBuffer: RUNTIME_LIMITS.maxGitOutputBytes, encoding: "utf8" }); return result.stdout.trim(); }
 async function assertRuntimeTopology(repositoryRoot: string, runtimeRoot: string): Promise<{ root: string; runtime: string }> {
   const root = await realpath(repositoryRoot); const runtime = resolve(runtimeRoot); const rel = relative(root, runtime); if (!rel || rel === ".." || rel.startsWith(`..${sep}`) || resolve(runtime) !== join(root, ".pi", "factory", "runtime")) throw new Error("runtimeRoot must be the exact private repository runtime descendant"); await ensureNoSymlinkComponents(dirname(runtime)); return { root, runtime };
 }
-function excludedRepositoryPath(root: string, runtimeRoot: string, candidate: string): boolean { const path = resolve(candidate); const runtime = resolve(runtimeRoot); const runtimeRelative = relative(runtime, path); const underRuntime = runtimeRelative === "" || (runtimeRelative !== ".." && !runtimeRelative.startsWith(`..${sep}`)); const rootRelative = relative(root, path); return rootRelative === ".git" || rootRelative.startsWith(`.git${sep}`) || underRuntime; }
+function excludedRepositoryPath(_root: string, runtimeRoot: string, candidate: string): boolean { const path = resolve(candidate); const runtime = resolve(runtimeRoot); const runtimeRelative = relative(runtime, path); return runtimeRelative === "" || (runtimeRelative !== ".." && !runtimeRelative.startsWith(`..${sep}`)); }
+async function hashSnapshotFile(path: string, maximumBytes: number, expected: import("node:fs").Stats, label: string): Promise<{ digest: string; bytes: number }> {
+  if (fsConstants.O_NOFOLLOW === undefined) throw new Error("No-follow file opening is unavailable");
+  const handle = await open(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+  const hasher = createHash("sha256"); let bytesRead = 0;
+  try {
+    const opened = await handle.stat();
+    if (!opened.isFile() || opened.dev !== expected.dev || opened.ino !== expected.ino || opened.size > maximumBytes) throw new Error(`${label} identity changed`);
+    const buffer = Buffer.allocUnsafe(Math.min(64 * 1024, maximumBytes + 1));
+    while (true) {
+      const { bytesRead: count } = await handle.read(buffer, 0, buffer.byteLength, null);
+      if (count === 0) break;
+      bytesRead += count;
+      if (bytesRead > maximumBytes) throw new RangeError(`${label} exceeds ${maximumBytes} bytes`);
+      hasher.update(buffer.subarray(0, count));
+    }
+    const closed = await handle.stat();
+    if (!closed.isFile() || closed.dev !== opened.dev || closed.ino !== opened.ino || closed.size !== bytesRead || closed.size !== expected.size) throw new Error(`${label} changed while reading`);
+    return { digest: hasher.digest("hex"), bytes: bytesRead };
+  } finally { await handle.close(); }
+}
+
 export async function repositorySnapshot(repositoryRoot: string, runtimeRoot: string): Promise<RepositoryIdentity> {
-  const topology = await assertRuntimeTopology(repositoryRoot, runtimeRoot); const root = topology.root; const runtime = topology.runtime; const entries: string[] = []; let totalBytes = 0;
+  const topology = await assertRuntimeTopology(repositoryRoot, runtimeRoot); const root = topology.root; const runtime = topology.runtime;
+  const manifestHash = createHash("sha256"); const separator = String.fromCharCode(0); let manifestBytes = 0; let entryCount = 0; let totalBytes = 0;
+  const addManifestLine = (line: string): void => {
+    if (entryCount >= RUNTIME_LIMITS.maxSnapshotFiles) throw new RangeError("repository manifest has too many entries");
+    const encoded = Buffer.from(`${line}\n`, "utf8");
+    if (manifestBytes + encoded.byteLength > RUNTIME_LIMITS.maxManifestBytes) throw new RangeError("repository manifest exceeds encoded byte bound");
+    manifestHash.update(encoded); manifestBytes += encoded.byteLength; entryCount += 1;
+  };
   const visit = async (directory: string): Promise<void> => {
-    const children = (await readdir(directory)).sort(); for (const name of children) { const path = join(directory, name); if (excludedRepositoryPath(root, runtime, path)) continue; const rel = relative(root, path).replaceAll(sep, "/"); if (!safeRelativePath(rel)) throw new Error(`repository manifest contains unsafe path ${rel}`); const item = await lstat(path);
-      if (item.isSymbolicLink()) { const link = await readlink(path); if (link.length > RUNTIME_LIMITS.maxStringChars) throw new Error("repository symlink target exceeds bound"); entries.push(`L\0${rel}\0${link}`); }
-      else if (item.isDirectory()) { entries.push(`D\0${rel}`); await visit(path); }
-      else if (item.isFile()) { if (item.size > RUNTIME_LIMITS.maxSnapshotBytes || (totalBytes += item.size) > RUNTIME_LIMITS.maxSnapshotBytes) throw new RangeError("repository manifest exceeds byte bound"); entries.push(`F\0${rel}\0${digest(await boundedRead(path, RUNTIME_LIMITS.maxSnapshotBytes, `repository file ${rel}`, false))}`); }
-      else throw new Error(`repository manifest contains unsupported nonregular path ${rel}`);
-      if (entries.length > RUNTIME_LIMITS.maxSnapshotFiles) throw new RangeError("repository manifest has too many entries");
+    const names: string[] = []; const handle = await opendir(directory);
+    for await (const entry of handle) {
+      names.push(entry.name);
+      if (names.length + entryCount > RUNTIME_LIMITS.maxSnapshotFiles) throw new RangeError("repository manifest has too many entries");
+    }
+    names.sort();
+    for (const name of names) {
+      const path = join(directory, name); if (excludedRepositoryPath(root, runtime, path)) continue;
+      const rel = relative(root, path).replaceAll(sep, "/"); if (!safeRelativePath(rel)) throw new Error(`repository manifest contains unsafe path ${rel}`);
+      const item = await lstat(path);
+      if (item.isSymbolicLink()) {
+        const linkTarget = await readlink(path); const linkBytes = Buffer.byteLength(linkTarget, "utf8");
+        if (linkBytes > RUNTIME_LIMITS.maxSymlinkBytes) throw new Error("repository symlink target exceeds bound");
+        addManifestLine(`L${separator}${rel}${separator}${linkTarget}`);
+      } else if (item.isDirectory()) { addManifestLine(`D${separator}${rel}`); await visit(path); }
+      else if (item.isFile()) {
+        if (item.size > RUNTIME_LIMITS.maxSnapshotBytes || totalBytes + item.size > RUNTIME_LIMITS.maxSnapshotBytes) throw new RangeError("repository manifest exceeds byte bound");
+        const file = await hashSnapshotFile(path, RUNTIME_LIMITS.maxSnapshotBytes, item, `repository file ${rel}`); totalBytes += file.bytes; addManifestLine(`F${separator}${rel}${separator}${file.digest}`);
+      } else throw new Error(`repository manifest contains unsupported nonregular path ${rel}`);
     }
   };
-  await visit(root); const manifest = entries.join("\n"); const filesDigest = digest(manifest); return { head: await gitHead(root), statusDigest: filesDigest, filesDigest };
+  await visit(root); const filesDigest = manifestHash.digest("hex"); return { head: await gitHead(root), filesDigest };
 }
 function environmentIdentity(): EnvironmentIdentity { const nodeMajor = Number(process.versions.node.split(".")[0]); const platform = process.platform; const arch = process.arch; const ci = process.env.CI === "true"; return { nodeMajor, platform, arch, ci, digest: jsonDigest({ nodeMajor, platform, arch, ci }) }; }
 function promptRef(catalog: LoadedWorkflowCatalog, phaseId: "scout" | "architect"): ArtifactRef { const phase = catalog.workflow.phases.find((item) => item.id === phaseId); if (!phase?.promptAsset) throw new Error(`Prompt is missing for ${phaseId}`); const bytes = catalog.assets[phase.promptAsset]; if (!bytes) throw new Error(`Prompt asset is missing: ${phase.promptAsset}`); const promptDigest = digest(bytes); return { id: `prompt-${promptDigest.slice(0, 16)}`, kind: "prompt", path: phase.promptAsset, digest: promptDigest, bytes: bytes.byteLength }; }
 
 export class PlanChangeRuntime {
   private readonly now: () => string; private readonly workflowDigest: string; private readonly environment: EnvironmentIdentity;
-  constructor(private readonly options: PlanChangeRuntimeOptions) { this.now = options.now ?? (() => new Date().toISOString()); this.workflowDigest = digestWorkflow(options.catalog.workflow, options.catalog.assets); this.environment = environmentIdentity(); }
+  constructor(private readonly options: PlanChangeRuntimeOptions) { assertPlanChangeTopology(options.catalog.workflow); this.now = options.now ?? (() => new Date().toISOString()); this.workflowDigest = digestWorkflow(options.catalog.workflow, options.catalog.assets); this.environment = environmentIdentity(); }
   async inspect(runId: string): Promise<RuntimeInspection> { const id = boundedString(runId, "runId", 128); try { await assertRuntimeTopology(this.options.repositoryRoot, this.options.runtimeRoot); } catch (error) { return { valid: false, events: [], uncertainInvocation: false, diagnostics: [diagnostic("runtime.topology-invalid", error instanceof Error ? error.message : "runtimeRoot topology is invalid")] }; } const repository = new RuntimeRepository(this.options.runtimeRoot, id); const inspection = await repository.inspect(); if (!inspection.valid || !inspection.run) return inspection; const diagnostics = [...inspection.diagnostics]; for (const envelope of Object.values(inspection.run.phaseEnvelopes ?? {})) for (const artifact of envelope.artifacts ?? []) { try { const bytes = await boundedRead(join(this.options.runtimeRoot, id, "artifacts", "plan.json"), RUNTIME_LIMITS.maxArtifactBytes, "plan artifact"); if (artifact.bytes !== bytes.byteLength || artifact.digest !== digest(bytes)) throw new Error("plan artifact identity is invalid"); } catch (error) { diagnostics.push(diagnostic("runtime.artifact-invalid", error instanceof Error ? error.message : "plan artifact is invalid")); } } return { ...inspection, valid: diagnostics.every((item) => item.severity !== "error"), diagnostics }; }
   async start(request: PlanChangeRequest, runId: string = randomUUID()): Promise<RuntimeExecution> {
     boundedString(request.requestId, "requestId", 256); boundedString(request.task, "task", 65_536); if (request.constraints && (request.constraints.length > 32 || request.constraints.some((item) => typeof item !== "string" || item.trim().length === 0 || item.length > 2_048))) throw new RangeError("constraints exceed their bound");
     await assertRuntimeTopology(this.options.repositoryRoot, this.options.runtimeRoot); const taskDigest = jsonDigest({ task: request.task, constraints: request.constraints ?? [] }); const store = new RuntimeRepository(this.options.runtimeRoot, runId); await store.prepare(); const before = await repositorySnapshot(this.options.repositoryRoot, this.options.runtimeRoot);
     const run: FactoryRun = { id: runId, workUnitId: request.requestId, workflowId: this.options.catalog.workflow.id, status: "running", currentPhaseId: "scout", executionStatus: "running", acceptanceStatus: "pending", uncertainInvocation: false, taskDigest, workflowDigest: this.workflowDigest, repositoryIdentity: before, environmentIdentity: this.environment, phaseEnvelopes: {} };
     await store.create(run);
-    try { await store.append("phase.entered", { phaseId: "scout" }); return await this.execute(store, run, request, before); } finally { await store.release(); }
+    try {
+      await store.append("phase.entered", { phaseId: "scout" });
+      return await this.execute(store, run, request, before);
+    } catch {
+      let phaseId = run.currentPhaseId; let uncertainInvocation = false;
+      try { const inspection = await store.inspect(); phaseId = inspection.run?.currentPhaseId ?? phaseId; uncertainInvocation = inspection.uncertainInvocation; } catch { /* recordLocalFailure remains the durable authority */ }
+      return await this.recordLocalFailure(store, run, phaseId, uncertainInvocation);
+    } finally { await store.release(); }
   }
   async resume(runId: string, _request?: PlanChangeRequest): Promise<RuntimeExecution> {
     const id = boundedString(runId, "runId", 128); const inspection = await this.inspect(id); if (!inspection.valid || !inspection.run) throw new Error("Cannot resume an invalid runtime");
@@ -418,6 +468,16 @@ export class PlanChangeRuntime {
     await store.append("capability.dispatch_result", { phaseId, target, attemptId, status: settledStatus, ...(receipt ? { receipt } : {}), diagnosticCodes: code ? [code] : [] });
     const outputRejected = settledStatus === "succeeded" && normalized.outputRejected; if (settledStatus !== "succeeded" || outputRejected) { const phaseResultStatus = outputRejected ? "failed" : settledStatus; const failedRun: FactoryRun = { ...run, status: "failed", executionStatus: settledStatus === "succeeded" ? "failed" : settledStatus, uncertainInvocation: settledStatus === "outcome_unknown" }; await store.append("phase.result", { phaseId, attemptId, status: phaseResultStatus, outputDigest: "", diagnosticCodes: code ? [code] : [] }); await store.writeRun(failedRun); return { status: settledStatus === "succeeded" ? "failed" : settledStatus, run: failedRun }; }
     const output = normalized.output; const envelope: PhaseEnvelope = { phaseId, attemptId, status: "succeeded", output, diagnostics: [], receipt: normalized.receipt as CapabilityReceiptRef }; const succeededRun: FactoryRun = { ...run, executionStatus: "succeeded", phaseEnvelopes: { ...run.phaseEnvelopes, [phaseId]: envelope } }; await store.append("phase.result", { phaseId, attemptId, status: "succeeded", outputDigest: jsonDigest(output), diagnosticCodes: [] }); await store.writeRun(succeededRun); return { status: "succeeded", output, envelope, run: succeededRun };
+  }
+  private async recordLocalFailure(store: RuntimeRepository, fallback: FactoryRun, phaseId: string, uncertainInvocation: boolean): Promise<RuntimeExecution> {
+    const inspection = await store.inspect(); const current = inspection.run ?? fallback;
+    if (current.status === "succeeded" || current.status === "rejected" || current.status === "abandoned") return this.outcome(current);
+    const unknown = uncertainInvocation || inspection.uncertainInvocation || current.uncertainInvocation === true;
+    const failed: FactoryRun = { ...current, status: "failed", executionStatus: unknown ? "outcome_unknown" : "failed", uncertainInvocation: unknown };
+    const attemptId = `${current.id}-${phaseId}-local`;
+    if (!inspection.events.some((event) => event.type === "phase.result" && event.data.attemptId === attemptId)) await store.append("phase.result", { phaseId, attemptId, status: "failed", outputDigest: "", diagnosticCodes: ["runtime.local-failure"] });
+    await store.writeRun(failed);
+    return { runId: current.id, status: unknown ? "outcome_unknown" : "failed", acceptance: emptyAcceptance(), diagnostics: [diagnostic("runtime.local-failure", "Runtime failed during a local phase operation", unknown ? "warning" : "error", phaseId)] };
   }
   private async failRun(store: RuntimeRepository, run: FactoryRun, phaseId: string, code: string): Promise<FactoryRun> { const failed = { ...run, status: "failed" as const, executionStatus: "failed" as const }; await store.append("phase.result", { phaseId, attemptId: `${run.id}-${phaseId}-rejected`, status: "failed", outputDigest: "", diagnosticCodes: [code] }); await store.writeRun(failed); return failed; }
   private async fail(store: RuntimeRepository, run: FactoryRun, code: string, message: string, phaseId: string): Promise<RuntimeExecution> { const failed = { ...run, status: "failed" as const, executionStatus: "failed" as const }; await store.append("phase.result", { phaseId, attemptId: `${run.id}-${phaseId}-local`, status: "failed", outputDigest: "", diagnosticCodes: [code] }); await store.writeRun(failed); return { runId: run.id, status: "failed", acceptance: emptyAcceptance(), diagnostics: [diagnostic(code, message, "error", phaseId)] }; }
