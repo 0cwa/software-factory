@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "development-capability-needs",
+  "base": [
+    "workflow.software-factory",
+    "workspace.git-worktree",
+    "protocol.invocation",
+    "source.github-read",
+    "role.repository-scout",
+    "role.software-architect",
+    "role.code-worker",
+    "role.code-reviewer"
+  ],
+  "profiles": {
+    "typescript-core-change": {
+      "add": [
+        "quality.node-typescript",
+        "source.npm-registry-read"
+      ],
+      "effects": ["fs.read", "fs.write", "process.spawn", "protocol.invoke"]
+    },
+    "cross-platform-filesystem-change": {
+      "extends": ["typescript-core-change"],
+      "add": [
+        "quality.cross-platform-fixtures",
+        "quality.fault-injection",
+        "role.security-reviewer"
+      ],
+      "requiresPlatforms": ["linux", "darwin", "win32"]
+    },
+    "protocol-provider-integration": {
+      "extends": ["typescript-core-change"],
+      "add": [
+        "provider.pi-protocol",
+        "provider.pi-dev",
+        "quality.protocol-contracts",
+        "quality.cancellation-and-receipts"
+      ]
+    },
+    "security-sensitive-change": {
+      "add": [
+        "role.security-reviewer",
+        "quality.security-adversarial",
+        "quality.secret-redaction",
+        "quality.protected-paths"
+      ],
+      "separateApproval": ["authority-expansion", "new-network-destination", "secret-reference-change"]
+    },
+    "documentation-only": {
+      "baseOverride": [
+        "workflow.software-factory",
+        "workspace.git-worktree",
+        "source.github-read",
+        "role.repository-scout",
+        "role.software-architect",
+        "role.code-reviewer"
+      ],
+      "effects": ["fs.read", "fs.write"]
+    },
+    "research-and-roadmap": {
+      "baseOverride": [
+        "workflow.software-factory",
+        "source.github-read",
+        "source.github-issue-write",
+        "role.repository-scout",
+        "role.software-architect",
+        "research.web-primary-sources"
+      ],
+      "effects": ["fs.read", "network.read", "protocol.invoke"]
+    },
+    "self-hosting-factory-foundry-change": {
+      "extends": ["typescript-core-change", "security-sensitive-change"],
+      "add": [
+        "evaluation.protected-controller",
+        "evaluation.held-out",
+        "recovery.standalone",
+        "quality.package-isolation",
+        "quality.offline-rollback"
+      ],
+      "separateApproval": ["protected-self-hosting-change"]
+    }
+  },
+  "rules": [
+    "Profiles are transparent defaults; Foundry shows their exact expansion and final provider delta.",
+    "Capabilities do not imply package choice until Foundry resolves reviewed providers.",
+    "Installed capabilities are exposed to a phase only through an explicit runtime grant/tool allowlist.",
+    "Unknown or unavailable needs block preparation rather than broadening shell or installing an arbitrary package."
+  ]
+}
