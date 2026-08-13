@@ -149,6 +149,9 @@ temp/
 
 # sssf runtime
 adws/adw_data/sessions/
+
+# software factory runtime state (tracked product root is .pi/factory/)
+/.pi/factory/runtime/
 # Unanchored: a trace db is never committed, wherever it turns up. Two empty
 # ones had been tracked — adws/sssf.db and templates/adws/sssf.db, the second
 # of which would have stamped a fake trace db into every target repo.

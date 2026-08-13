@@ -1,0 +1,14 @@
+{
+  "name": "@kybernetria/software-factory-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm --filter @kybernetria/software-factory build",
+    "typecheck": "pnpm --filter @kybernetria/software-factory typecheck",
+    "test": "pnpm --filter @kybernetria/software-factory test",
+    "check:package": "pnpm --filter @kybernetria/software-factory check:package"
+  }
+}

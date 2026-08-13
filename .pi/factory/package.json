@@ -1,0 +1,46 @@
+{
+  "name": "@kybernetria/software-factory",
+  "version": "0.1.0",
+  "description": "Deployable Software Factory package scaffold.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "factory": "./dist/cli.js",
+    "software-factory": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "workflows",
+    "prompts"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/build-provider.mjs",
+    "provider:verify": "node scripts/verify-provider.mjs",
+    "evidence:verify": "node scripts/verify-evidence.mjs",
+    "typecheck": "tsc --noEmit --allowImportingTsExtensions",
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "check:package": "pnpm build && pnpm pack --dry-run"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "0.84.1",
+    "@earendil-works/pi-coding-agent": "0.84.1",
+    "@earendil-works/pi-tui": "0.84.1",
+    "@kybernetria/pi-protocol": "https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz",
+    "ajv": "8.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9",
+    "@types/node": "24.5.2",
+    "typescript": "5.9.3"
+  }
+}

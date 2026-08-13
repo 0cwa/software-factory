@@ -1,0 +1,9 @@
+*
+!package.json
+!README.md
+!dist/
+!dist/**
+!workflows/
+!workflows/**
+!prompts/
+!prompts/**

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "protocol": {
+    "version": "4.0.0",
+    "release": "https://github.com/Kybernetria/pi-protocol/releases/download/v4.0.0/kybernetria-pi-protocol-4.0.0.tgz",
+    "integrity": "sha512-isZL8EH2TUNppqItrq1sfJ03d0YPeembYQHGaslUlAaUsCAV3N/JK0pR0sPPsE0qFZATPS+s89AX7dUDs6JA6Q==",
+    "archiveSha256": "sha256:e96d3470817193971be18712f7a444cf40cfe08a62c6cf7dfb3f8f2c2384372a",
+    "sourceTreeDigest": "sha256:67bb8f8a118cd2d15cda6e8af876e3f609622e85b0865e990fdf418617160591"
+  },
+  "piDev": {
+    "commit": "67f46824b44605093c8b945e50d7ad499d04c060",
+    "archive": "https://github.com/Kybernetria/pi-dev/archive/67f46824b44605093c8b945e50d7ad499d04c060.tar.gz",
+    "archiveSha256": "sha256:809e08893f5e9300d4ffd372904d1462e1e0e9e7d7d45357b861f37a44f9e05f",
+    "sourceTreeDigest": "sha256:eacd87ec2de3209327b3a9be098bcfd14c07f24e531c758fad25bc124f17b558",
+    "selectedSourceDigest": "sha256:95f3689793f1d41645851b8d1336c815f0cfcededce1c9c19f720f08a0a09fbe",
+    "selectedFiles": {
+      "pi.agents.json": "sha256:860f4f47e8ce440738cf787a04e59a43fc4a03c120d8997f2a78739f22261221",
+      "pi.protocol.json": "sha256:c7717ef9218513b7aa3b38e64c5a3f95b2ad84fd5619ffdc449975db30d03539",
+      "prompts/architect.md": "sha256:73a3a0623c81766850cc5533faaa5c9d19b6f49fc9122df02b5455548107e565",
+      "prompts/scout.md": "sha256:b62d4f780c5846f9a0a1fbb337bac79250a2fcf4376dd770c34494ba041a1eaa",
+      "src/roles/architect.ts": "sha256:7d77125975456563da222f2645e3e0bac46b8ee188dfb0669dda2cdc1458dc4f",
+      "src/roles/index.ts": "sha256:2c4034629f86868a2f2a63a345fcdf188c98b7b7a3b60a451d58e5242fa07336",
+      "src/roles/scout.ts": "sha256:8ac75bbdb9070f99d55671f50ef77dad201975e8569ebaad7fb794c2b2675b96",
+      "src/runtime/definition.ts": "sha256:bf6f22f6fc82e7bf645e1d883177ab72634fc643794b84c578cb9e6bbfc9b204",
+      "src/runtime/manifest.ts": "sha256:299866a7a933085dfe570195d1fe9160c9d93a2b107e5f7f24306ee44ea1db0e",
+      "src/runtime/run-agent.ts": "sha256:598033743f2ccca8030fb9938f1b89e2acc8d62cf66ccbdbf6e313e21ddf803e",
+      "src/types.ts": "sha256:b70f9d49be3fecd80a01edae63ab718f58cb4e8c8fd7dc8c9e86e78bb7edf702",
+      "protocol/agents.ts": "sha256:84f98d486538add4052796c144b5e577d13bc5e87dca49095ebc422226a364cf"
+    }
+  }
+}
