@@ -7,7 +7,7 @@
 
 The production CLI is a thin argument and rendering boundary over one shared `FactoryApplication`. Workflow metadata, runtime execution, and inspection return a normalized application result; human and JSON output are renderings of that result. Workflow views use one normalized graph and digest. A host-composed `CapabilityPort` is an explicit injection seam for tests and embedding.
 
-The standalone bin does not import or emulate a Pi Protocol host. Pi Protocol v4.0.0's `./core` export is TypeScript-only for plain Node, so standalone `run` fails before creating a run with a focused diagnostic referencing [Kybernetria/pi-protocol#5](https://github.com/Kybernetria/pi-protocol/issues/5). Metadata and strict inspection remain available without a provider.
+The standalone bin uses a project-local generated JavaScript Protocol/Pi-Dev provider host and never enables a fake provider. The host bundles the pinned Protocol v4.0.0 runtime and real Pi-Dev registrations; TypeScript Pi extensions are normal upstream because Pi loads extensions through jiti. Upstream issue #5 is an optional plain-Node export enhancement, not a Factory blocker. The prior plain-Node `./core` limitation is therefore no longer a Factory blocker, and standalone `run` now bootstraps the generated host before creating a run; startup errors are reported truthfully through [Kybernetria/pi-protocol#5](https://github.com/Kybernetria/pi-protocol/issues/5). Metadata and strict inspection remain available without a provider.
 
 ## Consequences
 
@@ -15,6 +15,7 @@ The standalone bin does not import or emulate a Pi Protocol host. Pi Protocol v4
 - Request files are bounded UTF-8 regular files contained by the repository; ambiguous unsafe paths are rejected.
 - Stable exit codes distinguish usage, failure, rejected acceptance, and unknown capability outcomes.
 - Tests use a contract-faithful injected fake only inside disposable fixtures; production CLI has no fake mode or environment switch.
+- Hash-checked source provenance is embedded beside the generated `dist/provider-host.js`; the bundle does not import copied reference trees.
 
 ## Final integration correction
 
@@ -26,4 +27,4 @@ The residual file-race limitation is same-user concurrent replacement of an ance
 
 ## Deferred trigger
 
-Provider bootstrap is enabled only after the upstream JavaScript export/declarations are available or an approved host composition is supplied. SF-2 remains deferred until the owner explicitly starts it; no TUI, retries, discovery marketplace, or generic workflow extraction is part of this decision.
+The generated host uses the operator's existing Pi agent directory only for authentication and model catalogs. Nested sessions use in-memory session managers and settings, explicit cwd, and a resource loader with extensions, skills, prompt templates, themes, project context, and ambient project settings disabled. Scout and architect execute through direct in-process `invokeAs` calls with target-specific grants, bounded five-minute phase deadlines (ten minutes sequentially), cancellation propagation, idempotent disposal, and no replay after an unknown outcome. The host verifies registration and contract digest before readiness. Upstream issue #5 remains optional plain-Node export work and is not required by Factory. SF-2 remains deferred until the owner explicitly starts it; no TUI, retries, discovery marketplace, or generic workflow extraction is part of this decision.

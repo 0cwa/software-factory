@@ -16,7 +16,8 @@ import type {
 const FACTORY_PRINCIPAL_ID = "workflow:software-factory";
 const FACTORY_PRINCIPAL_KIND = "agent" as const;
 const CAPABILITY_TARGETS = new Set(["pi_dev.scout", "pi_dev.architect"]);
-const CAPABILITY_EFFECTS = ["fs.read", "model.call"] as const;
+const SCOUT_EFFECTS = ["fs.read", "model.call"] as const;
+const ARCHITECT_EFFECTS = ["fs.read", "model.call", "protocol.invoke"] as const;
 const MAX_DIAGNOSTIC_CHARS = 256;
 
 /** The deliberately small public surface required from a host Protocol fabric. */
@@ -56,12 +57,9 @@ export function createPiProtocolCapabilityPort(fabric: PublicProtocolFabric): Ca
   return {
     async dispatch(target: CapabilityInvocation["target"], invocation: CapabilityInvocation): Promise<CapabilityDispatchResult> {
       if (!CAPABILITY_TARGETS.has(target)) throw new TypeError(`Unsupported Protocol target: ${target}`);
-      const grant: ProtocolGrant = {
-        targets: [target],
-        effects: CAPABILITY_EFFECTS,
-        maxDepth: 0,
-        maxInvocations: 1,
-      };
+      const grant: ProtocolGrant = target === "pi_dev.architect"
+        ? { targets: ["pi_dev.architect", "pi_dev.scout"], effects: ARCHITECT_EFFECTS, maxDepth: 4, maxInvocations: 16 }
+        : { targets: ["pi_dev.scout"], effects: SCOUT_EFFECTS, maxDepth: 0, maxInvocations: 1 };
       const options: InvokeAsOptions = {
         grant,
         ...(invocation.signal ? { signal: invocation.signal } : {}),

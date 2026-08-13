@@ -6,7 +6,7 @@ import { join, relative, resolve, sep, dirname } from "node:path";
 import { promisify } from "node:util";
 import type { CapabilityPort, Diagnostic, FactoryRun } from "./contracts.js";
 import { loadPlanChangeCatalog, type LoadedWorkflowCatalog } from "./catalog.js";
-import { createUnavailableCapabilityPort, loadProductionCapabilityPort, providerHostUnavailableDiagnostic } from "./production.js";
+import { createUnavailableCapabilityPort, loadProductionCapabilityPort, providerHostUnavailableDiagnostic, type DisposableCapabilityPort } from "./production.js";
 import { createPlanChangeRuntime, type RuntimeInspection, type RuntimeExecution } from "./runtime.js";
 import { normalizeWorkflow, renderWorkflowMermaid, renderWorkflowText, validateWorkflow } from "./workflow.js";
 import { isCanonicalPathInside, safeGitEnvironment } from "./environment.js";
@@ -30,6 +30,8 @@ export interface FactoryApplicationOptions {
   readonly repositoryRoot?: string;
   /** Host composition seam. The standalone CLI intentionally leaves this unset. */
   readonly capabilityPort?: CapabilityPort;
+  readonly productionCapabilityPortFactory?: (options: { cwd: string }) => Promise<DisposableCapabilityPort>;
+  readonly signal?: AbortSignal;
   readonly cwd?: string;
 }
 
@@ -146,6 +148,17 @@ function inspectExitCode(inspection: RuntimeInspection): number {
   return EXIT_CODES.outcomeUnknown;
 }
 
+const PRODUCTION_CLEANUP_TIMEOUT_MS = 10_000;
+async function disposeProductionHost(host: DisposableCapabilityPort): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    await Promise.race([
+      host.dispose(),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Production provider cleanup deadline exceeded")), PRODUCTION_CLEANUP_TIMEOUT_MS); }),
+    ]);
+  } finally { if (timer) clearTimeout(timer); }
+}
+
 export class FactoryApplication {
   private readonly catalogPromise: Promise<LoadedWorkflowCatalog>;
   private readonly cwd: string;
@@ -174,12 +187,30 @@ export class FactoryApplication {
       const source = await readRequestArgument(argument, repositoryRoot, this.cwd);
       const catalog = await this.catalogPromise;
       let capabilityPort = this.options.capabilityPort;
+      let productionHost: DisposableCapabilityPort | undefined;
       if (!capabilityPort) {
-        try { capabilityPort = loadProductionCapabilityPort(); } catch { return withDiagnostics("run", { workflowId: catalog.workflow.id, runId, source: source.source }, [providerHostUnavailableDiagnostic()], EXIT_CODES.failure); }
+        try {
+          productionHost = await (this.options.productionCapabilityPortFactory ?? loadProductionCapabilityPort)({ cwd: repositoryRoot });
+          capabilityPort = productionHost;
+        } catch (error) {
+          return withDiagnostics("run", { workflowId: catalog.workflow.id, runId, source: source.source }, [providerHostUnavailableDiagnostic(error)], EXIT_CODES.failure);
+        }
       }
-      const runtime = createPlanChangeRuntime({ runtimeRoot: join(repositoryRoot, ".pi", "factory", "runtime"), repositoryRoot, catalog, capabilityPort });
-      const execution = await runtime.start({ requestId: `cli-${randomUUID()}`, task: source.task }, runId);
-      return withDiagnostics("run", { workflowId: catalog.workflow.id, runId: execution.runId, status: execution.status, source: source.source, ...(source.path ? { path: source.path } : {}), acceptance: execution.acceptance }, execution.diagnostics, runExitCode(execution.status));
+      let result: ApplicationResult;
+      try {
+        const runtime = createPlanChangeRuntime({ runtimeRoot: join(repositoryRoot, ".pi", "factory", "runtime"), repositoryRoot, catalog, capabilityPort });
+        const execution = await runtime.start({ requestId: `cli-${randomUUID()}`, task: source.task, ...(this.options.signal ? { signal: this.options.signal } : {}) }, runId);
+        result = withDiagnostics("run", { workflowId: catalog.workflow.id, runId: execution.runId, status: execution.status, source: source.source, ...(source.path ? { path: source.path } : {}), acceptance: execution.acceptance }, execution.diagnostics, runExitCode(execution.status));
+      } catch (error) {
+        result = { ...failure("run", "run.failed", "Plan-change run failed", EXIT_CODES.failure, { runId }), diagnostics: diagnosticsFrom(error, "run.failed") };
+      }
+      if (productionHost) {
+        try { await disposeProductionHost(productionHost); }
+        catch (error) {
+          result = { ...result, diagnostics: [...result.diagnostics, diagnostic("provider.cleanup-failed", error instanceof Error ? `Production provider cleanup failed: ${error.message}` : "Production provider cleanup failed", "warning")] };
+        }
+      }
+      return result;
     } catch (error) { return { ...failure("run", "run.failed", "Plan-change run failed", EXIT_CODES.failure, { runId }), diagnostics: diagnosticsFrom(error, "run.failed") }; }
   }
   async inspectRun(runId: string): Promise<ApplicationResult> {
@@ -231,6 +262,6 @@ export function renderApplicationResult(result: ApplicationResult, json = false,
   return `${lines.join("\n")}\n`;
 }
 
-export async function createCliApplication(cwd = process.cwd()): Promise<FactoryApplication> {
-  return new FactoryApplication({ cwd });
+export async function createCliApplication(cwd = process.cwd(), signal?: AbortSignal): Promise<FactoryApplication> {
+  return new FactoryApplication({ cwd, ...(signal ? { signal } : {}) });
 }

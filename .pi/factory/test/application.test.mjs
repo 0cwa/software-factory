@@ -90,6 +90,35 @@ test("human and JSON renderers expose the same application decision", async () =
   } finally { await cleanup(fixtureRun.root); }
 });
 
+test("production cleanup failure cannot overwrite an unknown execution", async () => {
+  const fixtureRun = await fixture("unknown");
+  try {
+    const port = createPiProtocolCapabilityPort(fixtureRun.fabric);
+    const application = new FactoryApplication({ catalog, repositoryRoot: fixtureRun.root, cwd: fixtureRun.root, productionCapabilityPortFactory: async () => ({
+      dispatch: port.dispatch,
+      async dispose() { throw new Error("cleanup fixture failure"); },
+    }) });
+    const result = await application.runPlanChange("cleanup must not rewrite outcome");
+    assert.equal(result.exitCode, 5);
+    assert.equal(result.data.status, "outcome_unknown");
+    assert.equal(result.diagnostics.at(-1).code, "provider.cleanup-failed");
+    assert.match(result.diagnostics.at(-1).message, /cleanup fixture failure/);
+  } finally { await cleanup(fixtureRun.root); }
+});
+
+test("pre-aborted application request does not invoke a provider", async () => {
+  const fixtureRun = await fixture();
+  const controller = new AbortController();
+  controller.abort();
+  try {
+    const application = new FactoryApplication({ catalog, repositoryRoot: fixtureRun.root, cwd: fixtureRun.root, capabilityPort: createPiProtocolCapabilityPort(fixtureRun.fabric), signal: controller.signal });
+    const result = await application.runPlanChange("do not dispatch");
+    assert.equal(result.data.status, "failed");
+    assert.equal(result.exitCode, 3);
+    assert.equal(fixtureRun.fabric.calls.length, 0);
+  } finally { await cleanup(fixtureRun.root); }
+});
+
 test("rejected and unknown inspect results retain distinct stable exit codes", async () => {
   for (const [mode, expected, exitCode] of [["rejected", "rejected", 4], ["unknown", "outcome_unknown", 5]]) {
     const fixtureRun = await fixture(mode);
@@ -116,7 +145,7 @@ test("abandon is a thin fixed-identity operator action and preserves unknown out
   } finally { await cleanup(fixtureRun.root); }
 });
 
-test("metadata commands and standalone provider blocker need no live Pi state", async () => {
+test("metadata commands remain provider-independent and production failures are truthful", async () => {
   const root = await mkdtemp(join(tmpdir(), "factory-cli-home-"));
   try {
     const show = await exec(process.execPath, [cli, "workflow", "show", "plan-change", "--format", "mermaid"], { cwd: root, env: { ...process.env, HOME: root } });
@@ -128,7 +157,7 @@ test("metadata commands and standalone provider blocker need no live Pi state", 
     const repository = await fixture();
     try {
       const before = await readFile(join(repository.root, "README.md"), "utf8");
-      await assert.rejects(() => exec(process.execPath, [cli, "run", "plan-change", "--request", "text", "--json"], { cwd: repository.root, env: { ...process.env, HOME: root } }), (error) => error.code === 3 && /Pi Protocol v4\.0\.0/.test(error.stdout));
+      await assert.rejects(() => exec(process.execPath, [cli, "run", "plan-change", "--request", "text", "--json"], { cwd: repository.root, env: { ...process.env, HOME: root } }), (error) => error.code === 3 && /\"status\":\"failed\"/.test(error.stdout) && !/llamacpp|local/.test(error.stdout));
       assert.equal(await readFile(join(repository.root, "README.md"), "utf8"), before);
     } finally { await cleanup(repository.root); }
   } finally { await cleanup(root); }

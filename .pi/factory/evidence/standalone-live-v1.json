@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "standalone-live-v1",
+  "recordedAt": "2026-08-12T23:59:24.654Z",
+  "candidateTreeDigest": "sha256:80277a3c465dc5613b3865560b688cac2224e2d9bdc37049d5b4eebea9a9686f",
+  "candidateAllowlist": [
+    "README.md",
+    "package.json",
+    "pnpm-lock.yaml",
+    "docs/adr/0002-sf1-cli-application-boundary.md",
+    ".pi/factory/README.md",
+    ".pi/factory/package.json",
+    ".pi/factory/prompts/plan-change-architect.md",
+    ".pi/factory/prompts/plan-change-scout.md",
+    ".pi/factory/prompts/protocol-awareness.md",
+    ".pi/factory/provider/pi.agents.json",
+    ".pi/factory/provider/pi-dev.protocol.json",
+    ".pi/factory/provider/prompts/architect.md",
+    ".pi/factory/provider/prompts/scout.md",
+    ".pi/factory/provider/source-lock.json",
+    ".pi/factory/scripts/build-provider.mjs",
+    ".pi/factory/scripts/candidate-digest.mjs",
+    ".pi/factory/scripts/evidence.mjs",
+    ".pi/factory/scripts/provider-host.ts",
+    ".pi/factory/scripts/verify-evidence.mjs",
+    ".pi/factory/scripts/verify-provider.mjs",
+    ".pi/factory/src/application.ts",
+    ".pi/factory/src/catalog.ts",
+    ".pi/factory/src/cli.ts",
+    ".pi/factory/src/contracts.ts",
+    ".pi/factory/src/environment.ts",
+    ".pi/factory/src/handoff.ts",
+    ".pi/factory/src/index.ts",
+    ".pi/factory/src/pi-protocol-core.d.ts",
+    ".pi/factory/src/production.ts",
+    ".pi/factory/src/protocol.ts",
+    ".pi/factory/src/runtime.ts",
+    ".pi/factory/src/workflow.ts",
+    ".pi/factory/test/application.test.mjs",
+    ".pi/factory/test/evidence.test.mjs",
+    ".pi/factory/test/package-shape.test.mjs",
+    ".pi/factory/test/runtime.test.mjs",
+    ".pi/factory/test/workflow.test.mjs",
+    ".pi/factory/tsconfig.json",
+    ".pi/factory/workflows/plan-change.json",
+    ".pi/factory/evidence/standalone-live-v1.json"
+  ],
+  "workflow": {
+    "id": "plan-change",
+    "result": "accepted",
+    "acceptance": true,
+    "gateIds": [
+      "plan-artifact-exists",
+      "plan-artifact-nonempty",
+      "structured-sections",
+      "identity-digest",
+      "receipt-refs",
+      "no-repository-mutation"
+    ]
+  },
+  "source": {
+    "piDevCommit": "67f46824b44605093c8b945e50d7ad499d04c060",
+    "piDevSourceTreeDigest": "sha256:eacd87ec2de3209327b3a9be098bcfd14c07f24e531c758fad25bc124f17b558",
+    "piDevSelectedSourceDigest": "sha256:95f3689793f1d41645851b8d1336c815f0cfcededce1c9c19f720f08a0a09fbe",
+    "protocolVersion": "4.0.0",
+    "protocolSourceTreeDigest": "sha256:67bb8f8a118cd2d15cda6e8af876e3f609622e85b0865e990fdf418617160591",
+    "providerBundleDigest": "sha256:735e4a13722d9f601494acbe1f6e6965bace4d19b0499e6334bf002dc944b6ff",
+    "projectedManifestDigest": "sha256:805ec785afdc4f524875a2312e6b88942a1ad115deb2b131275e9a9d9c89ebd8",
+    "provenanceDigest": "sha256:768f63a5503d90e1bbbce189538e6a158d2b0e4a4a4ca2c4dede0e235a18de68",
+    "packedArchiveDigest": "sha256:43f6569c25e506ade5db85311ea1a3b9aef3b995f2f17aee8f38a1877a8ef055"
+  },
+  "models": {
+    "scout": {
+      "class": "fast",
+      "specific": "openai-codex/gpt-5.6-luna",
+      "thinkingLevel": "low"
+    },
+    "architect": {
+      "class": "reasoning",
+      "specific": "openai-codex/gpt-5.6-sol",
+      "thinkingLevel": "high"
+    }
+  },
+  "liveRun": {
+    "runId": "cba99886-d187-4381-8ada-13fe5f5ce8a9",
+    "status": "succeeded",
+    "executionStatus": "succeeded",
+    "acceptanceStatus": "accepted",
+    "uncertainInvocation": false,
+    "baseHead": "51f6e5a6da34fb007a237d53d5af47891f6ba1f7",
+    "repositoryFilesDigest": "06ed816bc2c7050cfe3972190606413f87eaaa9ba53fcb3625fa62c2a190c653",
+    "workflowDigest": "9a9a902288e8a9d2c341b2095f0edeb9e3c6d46474a8f8eaebac7a330e0af9ef",
+    "planArtifact": {
+      "id": "plan-0a0a7fa79ba75ada",
+      "digest": "sha256:0a0a7fa79ba75ada8e7d716b3f6ab5bd2dd3a38c58cf505c5829b6c2ad442197",
+      "bytes": 7289
+    },
+    "receipts": [
+      {
+        "phase": "scout",
+        "target": "pi_dev.scout",
+        "state": "succeeded",
+        "invocationId": "invocation_5ac20c0c-8c4d-48d4-98f5-312e944ea82d",
+        "revision": 5,
+        "generation": 1,
+        "durationMs": 18789,
+        "contractDigest": "sha256:61a5a057210f19d1df06b22b7ddc17281c50074e1c16791b487e5790488ec518",
+        "projectionDigest": "a4f7078ee578b638f2fc55ee86ef19b0d348aaca404b3421136119bc63999abf"
+      },
+      {
+        "phase": "architect",
+        "target": "pi_dev.architect",
+        "state": "succeeded",
+        "invocationId": "invocation_c7e38e34-7bf6-4b56-9a18-4168a5db84a2",
+        "revision": 5,
+        "generation": 1,
+        "durationMs": 88478,
+        "contractDigest": "sha256:61a5a057210f19d1df06b22b7ddc17281c50074e1c16791b487e5790488ec518",
+        "projectionDigest": "d0c3f235410c00f705732d60877cea9335aa8478e80b912492675074596f88ee"
+      }
+    ]
+  },
+  "executionContext": {
+    "processCwd": "/tmp/factory-live-target-final2/nested/work",
+    "requestedRepositoryRoot": "/tmp/factory-live-target-final2",
+    "providerWorkerCwd": "/tmp/factory-live-target-final2",
+    "sessionOptionsCwd": "/tmp/factory-live-target-final2",
+    "toolCwd": "/tmp/factory-live-target-final2",
+    "isolatedAgentDir": "/tmp/factory-live-agent-final2",
+    "sessionFiles": [],
+    "mutation": "none"
+  },
+  "checks": [
+    {
+      "name": "typecheck",
+      "status": "passed"
+    },
+    {
+      "name": "build",
+      "status": "passed"
+    },
+    {
+      "name": "provider:verify",
+      "status": "passed"
+    },
+    {
+      "name": "test",
+      "status": "passed",
+      "tests": 51
+    },
+    {
+      "name": "check:package",
+      "status": "passed"
+    },
+    {
+      "name": "workflow:validate",
+      "status": "passed"
+    },
+    {
+      "name": "workflow:show-json",
+      "status": "passed"
+    },
+    {
+      "name": "candidate-hygiene",
+      "status": "passed",
+      "unrelatedPrefixIgnored": "pressure-loss-k-factor-research/"
+    },
+    {
+      "name": "packed-live",
+      "status": "passed",
+      "result": "accepted",
+      "models": [
+        "openai-codex/gpt-5.6-luna",
+        "openai-codex/gpt-5.6-sol"
+      ],
+      "nestedCwd": true,
+      "noSessionFiles": true,
+      "mutation": "none"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "repository": {
+    "beforeManifestDigest": "06ed816bc2c7050cfe3972190606413f87eaaa9ba53fcb3625fa62c2a190c653",
+    "afterManifestDigest": "06ed816bc2c7050cfe3972190606413f87eaaa9ba53fcb3625fa62c2a190c653",
+    "mutation": "none"
+  },
+  "git": {
+    "baseHead": "d527770"
+  },
+  "evidenceDigest": "sha256:02b9886caf4a1eddb3b3dd869325338940a994b7289f96a759105f175ce4c309"
+}

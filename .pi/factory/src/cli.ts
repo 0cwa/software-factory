@@ -39,7 +39,11 @@ async function main(): Promise<void> {
   const json = process.argv.slice(2).includes("--json");
   try {
     const command = parse(process.argv.slice(2));
-    const application = await createCliApplication();
+    const abortController = new AbortController();
+    const abort = () => abortController.abort();
+    process.once("SIGINT", abort);
+    process.once("SIGTERM", abort);
+    const application = await createCliApplication(process.cwd(), abortController.signal);
     const result = command.name === "show"
       ? await application.showWorkflow(command.format)
       : command.name === "validate"
@@ -49,6 +53,8 @@ async function main(): Promise<void> {
           : command.name === "inspect"
             ? await application.inspectRun(command.runId as string)
             : await application.abandonRun(command.runId as string);
+    process.removeListener("SIGINT", abort);
+    process.removeListener("SIGTERM", abort);
     process.stdout.write(renderApplicationResult(result, command.json, command.format === "json" && !command.json));
     process.exitCode = result.exitCode;
   } catch (error) {

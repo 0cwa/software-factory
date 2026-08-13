@@ -106,7 +106,7 @@ test("accepted execution is sequential, receipt-backed, bounded, and mutation-fr
     assert.equal(fixture.fabric.calls[0].input.task, "plan safely");
     assert.deepEqual(fixture.fabric.principals, [{ id: "workflow:software-factory", kind: "agent" }]);
     assert.deepEqual(fixture.fabric.calls[0].options.grant, { targets: ["pi_dev.scout"], effects: ["fs.read", "model.call"], maxDepth: 0, maxInvocations: 1 });
-    assert.deepEqual(fixture.fabric.calls[1].options.grant, { targets: ["pi_dev.architect"], effects: ["fs.read", "model.call"], maxDepth: 0, maxInvocations: 1 });
+    assert.deepEqual(fixture.fabric.calls[1].options.grant, { targets: ["pi_dev.architect", "pi_dev.scout"], effects: ["fs.read", "model.call", "protocol.invoke"], maxDepth: 4, maxInvocations: 16 });
     assert.deepEqual(fixture.fabric.calls[0].input, { task: "plan safely" });
     assert.equal(fixture.fabric.calls[0].input.constraints, undefined);
     assert.deepEqual(fixture.fabric.calls[1].input.constraints, ["bounded"]);
@@ -122,6 +122,40 @@ test("accepted execution is sequential, receipt-backed, bounded, and mutation-fr
     const journal = await readFile(join(fixture.runtimeRoot, "run-accepted", "journal.jsonl"), "utf8");
     assert.doesNotMatch(journal, /plan safely/);
     assert.doesNotMatch(journal, /input\":/);
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("pre-aborted request is a definitive local cancellation with no invocation", async () => {
+  const fixture = await runtimeFixture();
+  const controller = new AbortController();
+  controller.abort();
+  try {
+    const result = await fixture.runtime.start({ requestId: "req-pre-aborted", task: "plan", signal: controller.signal }, "run-pre-aborted");
+    assert.equal(result.status, "failed");
+    assert.equal(fixture.fabric.calls.length, 0);
+    const inspection = await fixture.runtime.inspect("run-pre-aborted");
+    assert.equal(inspection.uncertainInvocation, false);
+    assert.match(inspection.events.find((event) => event.type === "phase.result").data.diagnosticCodes[0], /cancelled-before-dispatch/);
+  } finally { await clean(fixture.repositoryRoot); }
+});
+
+test("external request cancellation reaches the capability and remains an unknown outcome", async () => {
+  const fixture = await runtimeFixture();
+  const controller = new AbortController();
+  fixture.fabric.invokeAs = async (principal, target, input, options) => {
+    fixture.fabric.calls.push({ principal, target, input, options });
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return { ok: true, output: target === "pi_dev.scout" ? scout() : architect(), result: { ok: true }, receipt: { schemaVersion: 1, invocationId: "late-cancel-success", revision: 1, state: "succeeded", traceId: "trace-cancel", spanId: "span-cancel", target, requestedAt: 1, effectsMayHaveOccurred: true, childInvocationIds: [], externalAudit: "not_configured" } };
+  };
+  const promise = fixture.runtime.start({ requestId: "req-cancel", task: "plan", signal: controller.signal }, "run-cancel");
+  for (let attempt = 0; attempt < 100 && fixture.fabric.calls.length === 0; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 1));
+  assert.equal(fixture.fabric.calls.length, 1);
+  controller.abort();
+  try {
+    const result = await promise;
+    assert.equal(result.status, "outcome_unknown");
+    assert.equal(fixture.fabric.calls[0].options.signal.aborted, true);
+    assert.equal((await fixture.runtime.inspect("run-cancel")).uncertainInvocation, true);
   } finally { await clean(fixture.repositoryRoot); }
 });
 
